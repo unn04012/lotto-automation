@@ -35,19 +35,11 @@ This project automates the following tasks on the [Korean Lottery (Dong Hang Bok
 4. **Notification Service**
    - Email or other notifications upon winning
 
-## Architecture
+## Architecture Diagram
 
-```
-AWS ECS-EC2
-├── Playwright Container
-│   ├── Login Service
-│   ├── Purchase Service
-│   └── Result Checking Service
-└── DynamoDB
-    ├── User Info
-    ├── Purchased Tickets
-    └── Results History
-```
+![Lotto Automation Architecture](/lotto-automation.drawio.svg)
+
+The diagram above illustrates the architecture of the Lotto Automation system, showing the interaction between various components including AWS ECS, Playwright containers, and DynamoDB.
 
 ## Future Plans
 
