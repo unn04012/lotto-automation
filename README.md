@@ -1,41 +1,41 @@
-# 로또 자동화 프로젝트 (Lotto Automation)
+# Lotto Automation
 
-한국 로또 6/45 구매 및 조회를 자동화하는 프로젝트입니다.
+An automation project for purchasing and checking Korean Lotto 6/45 tickets.
 
-## 프로젝트 소개
+## Project Overview
 
-이 프로젝트는 [동행복권](https://dhlottery.co.kr) 사이트에서 다음과 같은 작업을 자동화합니다:
+This project automates the following tasks on the [Korean Lottery (Dong Hang Bok-kwon)](https://dhlottery.co.kr) website:
 
-- 로그인
-- 로또 구매
-- 당첨 번호 조회
-- 당첨 결과 확인
+- Login
+- Lottery ticket purchase
+- Winning number lookup
+- Prize checking
 
-## 기술 스택
+## Tech Stack
 
-- **웹 자동화**: Playwright
-- **서버**: AWS ECS-EC2
-- **데이터베이스**: DynamoDB
-- **언어**: JavaScript/TypeScript
-- **컨테이너화**: Docker
+- **Web Automation**: Playwright
+- **Server**: AWS ECS-EC2
+- **Database**: DynamoDB
+- **Language**: JavaScript/TypeScript
+- **Containerization**: Docker
 
-## 주요 기능
+## Key Features
 
-1. **로그인 자동화**
-   - 계정 정보를 안전하게 저장하고 자동 로그인 지원
+1. **Automated Login**
+   - Securely store account information and handle login process
 
-2. **로또 구매 자동화**
-   - 자동 번호 선택 또는 사용자 지정 번호로 구매
-   - 정기 구매 스케줄링
+2. **Automated Ticket Purchase**
+   - Support for random number generation or custom number selection
+   - Scheduled regular purchases
 
-3. **당첨 정보 확인**
-   - 구매한 로또의 당첨 여부 확인
-   - 당첨 통계 및 히스토리 관리
+3. **Results Checking**
+   - Verify winning status for purchased tickets
+   - Maintain winning statistics and history
 
-4. **알림 서비스**
-   - 당첨 시 이메일 또는 기타 방식으로 알림
+4. **Notification Service**
+   - Email or other notifications upon winning
 
-## 구성 아키텍처
+## Architecture
 
 ```
 AWS ECS-EC2
@@ -49,17 +49,17 @@ AWS ECS-EC2
     └── Results History
 ```
 
-## 향후 계획
+## Future Plans
 
-- API 엔드포인트 구축
-- 웹 인터페이스 개발
-- 고급 번호 추천 알고리즘 구현
-- 모바일 앱 개발
+- Build API endpoints
+- Develop web interface
+- Implement advanced number recommendation algorithms
+- Mobile app development
 
-## 라이센스
+## License
 
 MIT
 
-## 기여
+## Contributing
 
-Pull Request와 Issue는 언제나 환영합니다!
+Pull Requests and Issues are always welcome!
