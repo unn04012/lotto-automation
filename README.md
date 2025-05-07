@@ -22,13 +22,16 @@ This project automates the following tasks on the [Korean Lottery (Dong Hang Bok
 ## Key Features
 
 1. **Automated Login**
+
    - Securely store account information and handle login process
 
 2. **Automated Ticket Purchase**
+
    - Support for random number generation or custom number selection
    - Scheduled regular purchases
 
 3. **Results Checking**
+
    - Verify winning status for purchased tickets
    - Maintain winning statistics and history
 
