@@ -1,10 +1,9 @@
 import { Browser, chromium, Page } from '@playwright/test';
-import { LotteryAgentBaseService } from './lottery-agent-base.service';
+import { ILotteryAgentService, LottoResult } from './lottery-agent.service.interface';
 import { Injectable, Logger } from '@nestjs/common';
-import { LottoConfigService } from 'src/config/lotto/lotto-config.service';
 
 @Injectable()
-export class LotteryAgentPlayWrightService extends LotteryAgentBaseService {
+export class LotteryAgentPlayWrightService implements ILotteryAgentService {
   /**
    * 자동화에 사용되는 Playwright Browser 인스턴스입니다.
    * 웹 상호작용을 위한 브라우저 프로세스를 관리합니다.
@@ -16,32 +15,39 @@ export class LotteryAgentPlayWrightService extends LotteryAgentBaseService {
    * 각 컨텍스트는 별도의 쿠키, 로컬 스토리지 및 캐시를 가집니다.
    */
   private page: Page;
-  private _baseUrl = 'https://www.dhlottery.co.kr/user.do?method=login&returnUrl=';
+  private _baseUrl = 'https://www.dhlottery.co.kr';
   private _logger = new Logger(LotteryAgentPlayWrightService.name);
 
-  constructor(private readonly _config: LottoConfigService) {
-    super();
-  }
+  /**
+   * browser context를 초기화합니다.
+   */
+  public async initialize(): Promise<void> {
+    if (!this._checkAgentStatus()) {
+      this.browser = await chromium.launch({
+        headless: false, // 브라우저 화면을 보려면 false로 설정
+      });
 
-  async initialize(): Promise<void> {
-    this.browser = await chromium.launch({
-      headless: false, // 브라우저 화면을 보려면 false로 설정
-    });
+      const context = await this.browser.newContext({
+        viewport: { width: 1920, height: 1080 },
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
+      });
 
-    const context = await this.browser.newContext({
-      viewport: { width: 1920, height: 1080 },
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
-    });
-
-    this.page = await context.newPage();
+      this.page = await context.newPage();
+    }
   }
 
   public async login(request: { id: string; password: string }): Promise<void> {
-    if (!this._checkAgentStatus()) await this.initialize();
-    const { id, password } = this._config;
+    await this.initialize();
+
+    const loginPageUrl = `${this._baseUrl}/user.do?method=login&returnUrl=`;
+    const { id, password } = request;
+
+    this._logger.log('동행복권 로그인 페이지로 이동 중...');
+
+    await this.page.goto(loginPageUrl);
 
     await this.page.fill('#userId', id);
-    await this.page.fill('#password', password);
+    await this.page.fill('input[type="password"]', password);
 
     // 로그인 버튼 클릭
     await this.page.click('.btn_common.lrg.blu');
@@ -53,15 +59,207 @@ export class LotteryAgentPlayWrightService extends LotteryAgentBaseService {
       this._logger.log('로그인 성공!');
     } catch (error) {
       // 로그인 실패 확인 (에러 메시지 확인)
-      const errorMessage = await this.page.textContent('.error');
-      if (errorMessage) {
-        this._logger.error(`로그인 실패: ${errorMessage}`);
+
+      if (error) {
+        this._logger.error(`로그인 실패: ${JSON.stringify(error)}`);
       } else {
         this._logger.error('로그인 실패: 알 수 없는 이유');
       }
     }
   }
-  public getLottoNumber(round?: number): Promise<number[]> {
+
+  /**
+   * 최신 회차를 반환합니다.
+   * @param page
+   * @returns
+   */
+  private async _findLatestRoundNumber(page: Page) {
+    let currentRound = 0;
+    const roundText = await page.textContent('.win_result strong');
+
+    if (roundText) {
+      const roundMatch = roundText.match(/(\d+)회/); // [ '1170회', '1170', index: 0, input: '1170회', groups: undefined ]
+
+      currentRound = roundMatch ? Number(roundMatch[1]) : 0;
+    } else {
+      currentRound = await page.$eval('select[name="drwNo"]', (element: HTMLSelectElement) => {
+        return Number(element.value);
+      });
+    }
+
+    if (currentRound === 0) throw new Error('failed to find latest round number');
+
+    return currentRound;
+  }
+
+  public async getLottoNumber(round?: number): Promise<LottoResult> {
+    await this.initialize();
+    const url = `${this._baseUrl}/gameResult.do?method=byWin`;
+
+    await this.page.goto(url);
+
+    let currentRound: number;
+
+    if (round) {
+      // 회차 드롭다운 메뉴 선택
+      currentRound = round;
+      await this.page.evaluate((roundValue) => {
+        // 실제 select 요소 찾기 (검사 후 정확한 선택자로 대체 필요)
+        const select = document.querySelector('select[name="drwNo"]') as HTMLSelectElement;
+
+        if (select) {
+          select.value = roundValue;
+          const event = new Event('change', { bubbles: true });
+          select.dispatchEvent(event);
+          console.log('find select');
+        }
+
+        // hidden input 값도 업데이트
+        const hiddenInput = document.querySelector('#drwNo') as HTMLSelectElement;
+        if (hiddenInput) hiddenInput.value = roundValue;
+      }, round.toString());
+
+      // 조회 버튼 클릭
+      await this.page.click('.btn_common form blu');
+      await this.page.waitForTimeout(1000); // 결과 로딩 대기
+    } else {
+      // 현재 선택된 회차 정보 추출
+      currentRound = await this._findLatestRoundNumber(this.page);
+    }
+
+    const winningNumbers: number[] = [];
+
+    // 기본 6개 번호 추출
+    for (let i = 1; i <= 6; i++) {
+      const selector = `.win_result .ball_645:nth-child(${i})`;
+      const number = await this.page.textContent(selector);
+
+      winningNumbers.push(Number(number?.trim()));
+    }
+
+    // 보너스 번호 추출
+    const bonusSelector = '.bonus .ball_645';
+    const bonusNumberText = await this.page.textContent(bonusSelector);
+
+    const bonusNumber = Number(bonusNumberText?.trim());
+
+    return {
+      round: currentRound,
+      bonusNumber,
+      winningNumbers,
+    };
+  }
+
+  public async buyLottery(numbers: number[]): Promise<void> {
+    const url = `https://el.dhlottery.co.kr/game/TotalGame.jsp?LottoId=LO40`;
+    await this.page.goto(url);
+
+    // iframe이 로드될 때까지 대기
+    await this.page.waitForSelector('#ifrm_tab');
+
+    // iframe 요소 가져오기
+    const frameElement = await this.page.$('#ifrm_tab');
+    const frame = await frameElement?.contentFrame();
+
+    if (!frame) {
+      throw new Error('iframe 컨텐츠에 접근할 수 없습니다');
+    }
+
+    // 페이지가 완전히 로드될 때까지 대기
+    await frame.waitForLoadState('networkidle');
+
+    // 각 번호에 대해 체크박스 선택
+    for (const num of numbers) {
+      try {
+        // 방법 1: JavaScript를 사용하여 체크박스 선택
+        await frame.evaluate((num) => {
+          const checkbox = document.getElementById(`check645num${num}`) as HTMLInputElement;
+          if (checkbox) {
+            checkbox.checked = true;
+            // change 이벤트 트리거 (페이지의 로직에 필요한 경우)
+            const event = new Event('change', { bubbles: true });
+            checkbox.dispatchEvent(event);
+          }
+        }, num);
+
+        // 짧은 대기 시간 추가
+        await frame.waitForTimeout(200);
+      } catch (error) {
+        console.error(`번호 ${num} 선택 중 오류 발생:`, error);
+      }
+    }
+
+    // 선택 확인 버튼 클릭 (JavaScript 평가 사용)
+    await frame.evaluate(() => {
+      const button = document.getElementById('btnSelectNum');
+      if (button) button.click();
+    });
+
+    // 구매 버튼이 나타날 때까지 대기
+    await frame.waitForSelector('#btnBuy', { timeout: 10000 });
+
+    // 구매 버튼 클릭 (JavaScript 평가 사용)
+    await frame.evaluate(() => {
+      const button = document.getElementById('btnBuy');
+      if (button) button.click();
+    });
+
+    // 확인 대화 상자 대기
+    await frame.waitForSelector('input[type="button"][value="확인"]', { timeout: 10000 });
+
+    // 확인 버튼 클릭
+    await frame.evaluate(() => {
+      const buttons = document.querySelectorAll('input[type="button"][value="확인"]');
+      if (buttons.length > 0) {
+        const button = buttons[0] as HTMLElement;
+        button.click();
+      }
+    });
+
+    // 첫 번째 확인 대화 상자 대기 (구매하시겠습니까?)
+    try {
+      // 팝업이 나타날 때까지 대기
+      await frame.waitForSelector('.layer-message:has-text("구매하시겠습니까?")', { timeout: 10000 });
+
+      // "확인" 버튼 클릭
+      await frame.evaluate(() => {
+        const confirmButtons = document.querySelectorAll('input[type="button"][value="확인"]');
+        // 여러 확인 버튼 중 closepopupLayerConfirm(true) 함수를 호출하는 버튼 찾기
+        for (let i = 0; i < confirmButtons.length; i++) {
+          const button = confirmButtons[i] as HTMLElement;
+          if (button.getAttribute('onclick')?.includes('closepopupLayerConfirm(true)')) {
+            button.click();
+            break;
+          }
+        }
+      });
+
+      // 클릭 후 잠시 대기
+      await frame.waitForTimeout(1000);
+    } catch (error) {
+      console.error('첫 번째 확인 팝업 처리 중 오류 발생:', error);
+    }
+
+    // 필요한 경우 추가 닫기 버튼 처리
+    try {
+      await frame.waitForSelector('input[name="closeLayer"]', { timeout: 5000 });
+      await frame.evaluate(() => {
+        const closeButton = document.querySelector('input[name="closeLayer"]') as HTMLElement;
+        if (closeButton) {
+          closeButton.click();
+        }
+      });
+    } catch (error) {
+      await frame.waitForSelector('#btnBuy', { timeout: 10000 });
+      // 닫기 버튼이 없을 수 있으므로 오류 무시
+      console.log('닫기 버튼을 찾을 수 없거나 필요하지 않습니다.');
+    }
+
+    await this.page.close();
+    await this.browser.close();
+  }
+
+  buyAnnuityLottery(numbers: number[]): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
