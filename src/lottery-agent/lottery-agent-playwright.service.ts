@@ -263,6 +263,112 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
     throw new Error('Method not implemented.');
   }
 
+  public async buyLotteryAutomation(): Promise<void> {
+    const url = `https://el.dhlottery.co.kr/game/TotalGame.jsp?LottoId=LO40`;
+    await this.page.goto(url);
+
+    // iframe이 로드될 때까지 대기
+    await this.page.waitForSelector('#ifrm_tab');
+
+    // iframe 요소 가져오기
+    const frameElement = await this.page.$('#ifrm_tab');
+    const frame = await frameElement?.contentFrame();
+
+    if (!frame) {
+      throw new Error('iframe 컨텐츠에 접근할 수 없습니다');
+    }
+
+    // 페이지가 완전히 로드될 때까지 대기
+    await frame.waitForLoadState('networkidle');
+
+    // 자동번호 발급 버튼 클릭
+    await frame.evaluate(() => {
+      const autoButton = document.getElementById('num2');
+      console.log(autoButton);
+      if (autoButton) autoButton.click();
+    });
+
+    // 잠시 대기하여 자동 번호가 선택되도록 함
+    await frame.waitForTimeout(500);
+
+    // 선택 확인 버튼 클릭 (JavaScript 평가 사용)
+    await frame.evaluate(() => {
+      const button = document.getElementById('btnSelectNum');
+      if (button) button.click();
+    });
+
+    // 구매 버튼이 나타날 때까지 대기
+    await frame.waitForSelector('#btnBuy', { timeout: 10000 });
+
+    // 구매 버튼 클릭 (JavaScript 평가 사용)
+    await frame.evaluate(() => {
+      const button = document.getElementById('btnBuy');
+      if (button) button.click();
+    });
+
+    // 확인 대화 상자 대기
+    await frame.waitForSelector('input[type="button"][value="확인"]', { timeout: 10000 });
+
+    // 확인 버튼 클릭
+    await frame.evaluate(() => {
+      const buttons = Array.from(document.querySelectorAll('input[type="button"][value="확인"]'));
+      const filteredButtons = buttons.filter((button) => button.id !== 'btnSelectNum');
+
+      console.log('필터링된 확인 버튼 수:', filteredButtons.length);
+
+      if (filteredButtons.length > 0) {
+        console.log('확인 버튼 클릭 (btnSelectNum 제외)');
+        const button = filteredButtons[0] as HTMLElement;
+        button.click();
+        return true;
+      }
+
+      console.log('적절한 확인 버튼을 찾을 수 없음');
+      return false;
+    });
+
+    // 첫 번째 확인 대화 상자 대기 (구매하시겠습니까?)
+    try {
+      // 팝업이 나타날 때까지 대기
+      await frame.waitForSelector('.layer-message:has-text("구매하시겠습니까?")', { timeout: 10000 });
+
+      // "확인" 버튼 클릭
+      await frame.evaluate(() => {
+        const confirmButtons = document.querySelectorAll('input[type="button"][value="확인"]');
+        // 여러 확인 버튼 중 closepopupLayerConfirm(true) 함수를 호출하는 버튼 찾기
+        for (let i = 0; i < confirmButtons.length; i++) {
+          const button = confirmButtons[i] as HTMLElement;
+          if (button.getAttribute('onclick')?.includes('closepopupLayerConfirm(true)')) {
+            button.click();
+            break;
+          }
+        }
+      });
+
+      // 클릭 후 잠시 대기
+      await frame.waitForTimeout(1000);
+    } catch (error) {
+      console.error('첫 번째 확인 팝업 처리 중 오류 발생:', error);
+    }
+
+    // 필요한 경우 추가 닫기 버튼 처리
+    try {
+      await frame.waitForSelector('input[name="closeLayer"]', { timeout: 5000 });
+      await frame.evaluate(() => {
+        const closeButton = document.querySelector('input[name="closeLayer"]') as HTMLElement;
+        if (closeButton) {
+          closeButton.click();
+        }
+      });
+    } catch (error) {
+      await frame.waitForSelector('#btnBuy', { timeout: 10000 });
+      // 닫기 버튼이 없을 수 있으므로 오류 무시
+      console.log('닫기 버튼을 찾을 수 없거나 필요하지 않습니다.');
+    }
+
+    this._logger.log('로또 자동 구매가 완료되었습니다.');
+  }
+
   private _checkAgentStatus() {
     return this.browser && this.page;
   }

@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { LottoConfigModule } from './config/lotto/lotto-config.module';
 import { LotteryAgentModule } from './lottery-agent/lottery-agent.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [LottoConfigModule, LotteryAgentModule],
+  imports: [ConfigModule, LotteryAgentModule],
   controllers: [AppController],
   providers: [AppService],
 })
