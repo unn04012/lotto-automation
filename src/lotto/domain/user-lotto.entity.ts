@@ -1,17 +1,25 @@
-import { PrizeStatus } from '../repository/user-lotto.repository.interface';
+import { LottoType, PrizeStatus } from '../repository/user-lotto.repository.interface';
 import { UserLottoSchema } from '../schema/user-lotto.schema';
 
 export class UserLottoEntity {
+  private readonly _purchaseId: string;
   private readonly _userId: string;
   private readonly _purchasedNumbers: number[];
   private readonly _round: number;
   private readonly _purchasedDate: Date;
-  private readonly _prizeStatus: PrizeStatus;
-  private readonly _rank?: number;
+  private readonly _lottoType: LottoType;
 
-  private readonly _winningNumbers: number[];
-  private readonly _bonusNumber: number;
+  private _prizeStatus: PrizeStatus;
+  private _rank?: number;
+  private _winningNumbers: number[];
+  private _bonusNumber: number;
 
+  get purchaseId() {
+    return this._purchaseId;
+  }
+  get lottoType() {
+    return this._lottoType;
+  }
   get userId() {
     return this._userId;
   }
@@ -37,6 +45,17 @@ export class UserLottoEntity {
     return this._rank;
   }
 
+  set rank(value: number | undefined) {
+    this._rank = value;
+  }
+  set winningNumbers(value: number[] | undefined) {
+    if (value) {
+      this._winningNumbers = value;
+    } else {
+      throw new Error('Winning numbers cannot be set to undefined');
+    }
+  }
+
   private constructor({
     userId,
     round,
@@ -44,7 +63,10 @@ export class UserLottoEntity {
     purchasedDate,
     winningNumbers,
     bonusNumber,
+    lottoType,
     status,
+    purchaseId,
+    rank,
   }: {
     userId: string;
     purchasedNumbers: number[];
@@ -53,15 +75,21 @@ export class UserLottoEntity {
     status: PrizeStatus;
     winningNumbers?: number[];
     bonusNumber?: number;
+    lottoType: LottoType;
+    purchaseId: string;
+    rank?: number;
   }) {
     this._userId = userId;
     this._purchasedNumbers = purchasedNumbers;
     this._round = round;
     this._prizeStatus = status;
     this._purchasedDate = purchasedDate;
+    this._lottoType = lottoType;
+    this._purchaseId = purchaseId;
 
     if (winningNumbers) this._winningNumbers = winningNumbers;
     if (bonusNumber) this._bonusNumber = bonusNumber;
+    if (rank) this._rank = rank;
   }
 
   /**
@@ -83,6 +111,7 @@ export class UserLottoEntity {
     round,
     winningNumbers,
     bonusNumber,
+    lottoType,
   }: {
     userId: string;
     purchasedNumbers: number[];
@@ -91,6 +120,7 @@ export class UserLottoEntity {
     winningNumbers?: number[];
     bonusNumber?: number;
     prizeStatus?: PrizeStatus;
+    lottoType: LottoType;
   }): UserLottoEntity {
     const entity = new UserLottoEntity({
       userId,
@@ -100,6 +130,8 @@ export class UserLottoEntity {
       purchasedDate,
       winningNumbers,
       bonusNumber,
+      lottoType,
+      purchaseId: crypto.randomUUID(),
     });
 
     return entity;
@@ -114,17 +146,55 @@ export class UserLottoEntity {
       status: schema.prizeStatus as PrizeStatus,
       winningNumbers: schema.winningNumbers,
       bonusNumber: schema.bonusNumber,
+      lottoType: schema.lottoType,
+      purchaseId: schema.purchaseId,
+      rank: schema.rank,
     });
   }
 
   public getUserLotto() {
     return {
+      purchaseId: this._purchaseId,
       userId: this._userId,
       purchasedNumbers: this._purchasedNumbers,
       round: this._round,
       prizeStatus: this._prizeStatus,
       winningNumbers: this._winningNumbers,
       bonusNumber: this._bonusNumber,
+      rank: this._rank,
     };
+  }
+
+  public calculateRank(winningNumbers: number[], bonusNumber: number) {
+    const matchedCount = this._purchasedNumbers.filter((num) => winningNumbers.includes(num)).length;
+    const hasBonus = this._purchasedNumbers.includes(bonusNumber);
+
+    switch (matchedCount) {
+      case 6:
+        return 1;
+      case 5:
+        return hasBonus ? 2 : 3;
+      case 4:
+        return 4;
+      case 3:
+        return 5;
+      default:
+        return undefined; // 당첨되지 않음
+    }
+  }
+
+  public setLottoResult(winningNumbers: number[], bonusNumber: number) {
+    const rank = this.calculateRank(winningNumbers, bonusNumber);
+
+    this._winningNumbers = winningNumbers;
+    this._bonusNumber = bonusNumber;
+
+    if (rank) {
+      this._prizeStatus = 'WIN';
+      this._bonusNumber = bonusNumber;
+      this._rank = rank;
+    } else {
+      this._prizeStatus = 'FAIL';
+    }
   }
 }

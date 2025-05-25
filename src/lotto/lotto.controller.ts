@@ -1,5 +1,6 @@
-import { Controller, Get, Param, Post } from '@nestjs/common';
+import { Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { LottoService } from './lotto.service';
+import { LottoType } from './repository/user-lotto.repository.interface';
 
 @Controller('lotto')
 export class LottoController {
@@ -10,8 +11,8 @@ export class LottoController {
     await this.lottoService.buyLotto();
   }
 
-  @Get(':round')
-  public async getUserLotto(@Param('round') round: number) {
-    return this.lottoService.getUserLotto(round);
+  @Get('type/:type')
+  public async getUserLotto(@Param('type') type: LottoType, @Query('round') round?: string) {
+    return this.lottoService.getUserLotto(type, round);
   }
 }

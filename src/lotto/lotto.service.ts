@@ -1,12 +1,14 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ILotteryAgentService } from 'src/lottery-agent/lottery-agent.service.interface';
 import { Symbols } from 'src/symbols';
 import { UserService } from 'src/user/user.service';
-import { IUserLottoRepository } from './repository/user-lotto.repository.interface';
+import { IUserLottoRepository, LottoType } from './repository/user-lotto.repository.interface';
+import { UserLottoEntity } from './domain/user-lotto.entity';
 
 @Injectable()
 export class LottoService {
   private readonly _userId = '1'; // TODO: replace with actual user ID retrieval logic
+  private readonly _logger = new Logger(LottoService.name);
   constructor(
     @Inject(Symbols.lotteryAgent) private readonly _lotteryAgent: ILotteryAgentService,
     private readonly _userService: UserService,
@@ -22,18 +24,38 @@ export class LottoService {
 
     const { purchasedNumbers, round } = await this._lotteryAgent.buyLotteryAutomation();
 
-    await this._userLottoRepository.save({
+    const userLottoEntity = UserLottoEntity.create({
       userId: this._userId,
       purchasedNumbers,
       purchasedDate: new Date(),
       round,
+      lottoType: 'LOTTO',
     });
+
+    const userLotto = await this._userLottoRepository.save(userLottoEntity);
+
+    return userLotto.getUserLotto();
   }
 
-  public async getUserLotto(round: number) {
-    const user = await this._userLottoRepository.getUserLottoById(this._userId, round);
-    if (!user) throw new Error('User lotto not found');
+  public async getUserLotto(type: LottoType, round?: string) {
+    const roundNumber = round ? Number(round) : (await this._lotteryAgent.getLottoNumber()).round;
 
-    return user.getUserLotto();
+    this._logger.log(`Fetching user lotto for type: ${type}, round: ${roundNumber}`);
+
+    const users = await this._userLottoRepository.getUserLottoById(this._userId, roundNumber, type);
+
+    return users.map((user) => user.getUserLotto());
+  }
+
+  public async updateUserLottoRank(type: LottoType, roundNumber?: number) {
+    const { round, bonusNumber, winningNumbers } = await this._lotteryAgent.getLottoNumber(roundNumber);
+
+    const users = await this._userLottoRepository.getUserLottoById(this._userId, round, type);
+
+    for (const user of users) {
+      user.setLottoResult(winningNumbers, bonusNumber);
+
+      await this._userLottoRepository.save(user);
+    }
   }
 }

@@ -24,7 +24,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
   public async initialize(): Promise<void> {
     if (!this._checkAgentStatus()) {
       this.browser = await chromium.launch({
-        headless: false, // 브라우저 화면을 보려면 false로 설정
+        headless: true, // 브라우저 화면을 보려면 false로 설정
       });
 
       const context = await this.browser.newContext({
@@ -142,6 +142,9 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
     const bonusNumberText = await this.page.textContent(bonusSelector);
 
     const bonusNumber = Number(bonusNumberText?.trim());
+
+    await this.page.close();
+    await this.browser.close();
 
     return {
       round: currentRound,
@@ -403,7 +406,8 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
   }
 
   private _checkAgentStatus() {
-    return this.browser && this.page;
+    //TODO check is page is connected
+    return this.browser && this.browser.isConnected();
   }
 
   private async getCurrentRound(frame: Frame): Promise<number> {

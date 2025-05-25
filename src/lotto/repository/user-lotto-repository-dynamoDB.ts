@@ -1,7 +1,16 @@
 import { DynamoDBConfigService } from 'src/config/dynamodb/dynamodb-config.service';
 import { UserLottoEntity } from '../domain/user-lotto.entity';
-import { CreateUserLottoDto, IUserLottoRepository, PrizeStatus } from './user-lotto.repository.interface';
-import { AttributeValue, DynamoDBClient, GetItemCommand, GetItemCommandInput, PutItemCommand, PutItemCommandInput } from '@aws-sdk/client-dynamodb';
+import { CreateUserLottoDto, IUserLottoRepository, LottoType, LottoTypeEnum, PrizeStatus } from './user-lotto.repository.interface';
+import {
+  AttributeValue,
+  DynamoDBClient,
+  GetItemCommand,
+  GetItemCommandInput,
+  PutItemCommand,
+  PutItemCommandInput,
+  QueryCommand,
+  QueryCommandInput,
+} from '@aws-sdk/client-dynamodb';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -11,24 +20,51 @@ export class UserLottoRepositoryDynamoDB implements IUserLottoRepository {
     this._client = this._dynamoDBConfig.client;
   }
 
-  public async getUserLottoById(userId: string, round: number): Promise<UserLottoEntity | null> {
+  public async findByPurchaseId(purchaseId: string): Promise<UserLottoEntity | null> {
     const params: GetItemCommandInput = {
       TableName: 'UserLotto',
       Key: {
-        userId: { S: userId },
-        round: { N: String(round) }, // Assuming round is not used in the key, or you can adjust this based on your key schema
+        purchaseId: { S: purchaseId },
       },
     };
 
-    const userLotto = await this._client.send(new GetItemCommand(params));
-
-    if (!userLotto.Item) {
-      return null; // No item found
-    }
     try {
-      return this._mapDynamoDBItemToEntity(userLotto.Item);
+      const result = await this._client.send(new GetItemCommand(params));
+
+      if (!result.Item) {
+        return null; // 아이템이 없으면 null 반환
+      }
+
+      return this._mapDynamoDBItemToEntity(result.Item);
     } catch (error) {
-      console.error('Error getting user lotto by id:', error);
+      console.error('Error querying user lotto by purchaseId:', error);
+      throw error;
+    }
+  }
+
+  public async getUserLottoById(userId: string, round: number): Promise<UserLottoEntity[]> {
+    const params: QueryCommandInput = {
+      TableName: 'UserLotto',
+      IndexName: 'UserLottoRoundIndex', // 앞서 생성한 GSI 이름
+      KeyConditionExpression: 'userId = :userId AND lottoType = :lottoType',
+      FilterExpression: 'round = :round',
+      ExpressionAttributeValues: {
+        ':userId': { S: userId },
+        ':lottoType': { S: LottoTypeEnum.LOTTO },
+        ':round': { N: String(round) },
+      },
+    };
+
+    try {
+      const result = await this._client.send(new QueryCommand(params));
+
+      if (!result.Items || result.Items.length === 0) {
+        return []; // 결과가 없을 경우 빈 배열 반환
+      }
+
+      return result.Items.map((item) => this._mapDynamoDBItemToEntity(item));
+    } catch (error) {
+      console.error('Error querying user lotto:', error);
       throw error;
     }
   }
@@ -36,25 +72,24 @@ export class UserLottoRepositoryDynamoDB implements IUserLottoRepository {
     throw new Error('Method not implemented.');
   }
 
-  public async save({ userId, purchasedDate, purchasedNumbers, round }: CreateUserLottoDto): Promise<UserLottoEntity> {
-    const userLotto = UserLottoEntity.create({
-      userId,
-      purchasedNumbers,
-      purchasedDate,
-      round,
-    });
+  public async save(entity: UserLottoEntity): Promise<UserLottoEntity> {
+    await this._putItemCommand(entity);
 
-    await this._putItemCommand(userLotto);
-
-    return userLotto;
+    return entity;
   }
 
   private async _putItemCommand(userLotto: UserLottoEntity) {
     const param: PutItemCommandInput = {
       TableName: 'UserLotto',
       Item: {
+        purchaseId: {
+          S: userLotto.purchaseId,
+        },
         userId: {
           S: userLotto.userId,
+        },
+        lottoType: {
+          S: userLotto.lottoType,
         },
         purchasedNumbers: {
           L: userLotto.purchasedNumbers.map((num) => ({ N: num.toString() })),
@@ -95,6 +130,8 @@ export class UserLottoRepositoryDynamoDB implements IUserLottoRepository {
       winningNumbers: winningNumbers.length > 0 ? winningNumbers : undefined,
       bonusNumber: item.bonusNumber?.N ? parseInt(item.bonusNumber.N) : undefined,
       rank: item.rank?.N ? parseInt(item.rank.N) : undefined,
+      lottoType: item.lottoType?.S as LottoType,
+      purchaseId: item.purchaseId?.S as string,
     });
   }
 }
