@@ -6,9 +6,11 @@ import { LotteryAgentModule } from 'src/lottery-agent/lottery-agent.module';
 import { UserService } from 'src/user/user.service';
 import { LottoConfigModule } from 'src/config/lotto/lotto-config.module';
 import { DynamoDBConfigModule } from 'src/config/dynamodb/dynamodb-config.module';
+import { LottoController } from './lotto.controller';
 
 @Module({
   imports: [LottoConfigModule, DynamoDBConfigModule, LotteryAgentModule],
+  controllers: [LottoController],
   providers: [
     UserService,
     LottoService,

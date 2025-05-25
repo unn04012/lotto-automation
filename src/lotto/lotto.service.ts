@@ -29,4 +29,11 @@ export class LottoService {
       round,
     });
   }
+
+  public async getUserLotto(round: number) {
+    const user = await this._userLottoRepository.getUserLottoById(this._userId, round);
+    if (!user) throw new Error('User lotto not found');
+
+    return user.getUserLotto();
+  }
 }

@@ -15,7 +15,7 @@ export type CreateUserLottoDto = {
 };
 
 export interface IUserLottoRepository {
-  getUserLottoById(userId: string): Promise<UserLottoEntity | null>;
+  getUserLottoById(userId: string, round: number): Promise<UserLottoEntity | null>;
 
   getUserLottoByRound(round: number): Promise<UserLottoEntity | null>;
 

@@ -1,4 +1,5 @@
-import { PrizeStatus, PrizeStatusEnum } from '../repository/user-lotto.repository.interface';
+import { PrizeStatus } from '../repository/user-lotto.repository.interface';
+import { UserLottoSchema } from '../schema/user-lotto.schema';
 
 export class UserLottoEntity {
   private readonly _userId: string;
@@ -40,6 +41,7 @@ export class UserLottoEntity {
     userId,
     round,
     purchasedNumbers,
+    purchasedDate,
     winningNumbers,
     bonusNumber,
     status,
@@ -56,6 +58,7 @@ export class UserLottoEntity {
     this._purchasedNumbers = purchasedNumbers;
     this._round = round;
     this._prizeStatus = status;
+    this._purchasedDate = purchasedDate;
 
     if (winningNumbers) this._winningNumbers = winningNumbers;
     if (bonusNumber) this._bonusNumber = bonusNumber;
@@ -100,5 +103,28 @@ export class UserLottoEntity {
     });
 
     return entity;
+  }
+
+  public static fromSchema(schema: UserLottoSchema): UserLottoEntity {
+    return new UserLottoEntity({
+      userId: schema.userId,
+      purchasedNumbers: schema.purchasedNumbers,
+      round: schema.round,
+      purchasedDate: new Date(schema.purchasedDate),
+      status: schema.prizeStatus as PrizeStatus,
+      winningNumbers: schema.winningNumbers,
+      bonusNumber: schema.bonusNumber,
+    });
+  }
+
+  public getUserLotto() {
+    return {
+      userId: this._userId,
+      purchasedNumbers: this._purchasedNumbers,
+      round: this._round,
+      prizeStatus: this._prizeStatus,
+      winningNumbers: this._winningNumbers,
+      bonusNumber: this._bonusNumber,
+    };
   }
 }
