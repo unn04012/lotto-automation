@@ -1,4 +1,4 @@
-import { Browser, chromium, Page } from '@playwright/test';
+import { Browser, chromium, Frame, Page } from '@playwright/test';
 import { ILotteryAgentService, LottoResult } from './lottery-agent.service.interface';
 import { Injectable, Logger } from '@nestjs/common';
 
@@ -263,7 +263,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
     throw new Error('Method not implemented.');
   }
 
-  public async buyLotteryAutomation(): Promise<void> {
+  public async buyLotteryAutomation(): Promise<{ purchasedNumbers: number[]; round: number }> {
     const url = `https://el.dhlottery.co.kr/game/TotalGame.jsp?LottoId=LO40`;
     await this.page.goto(url);
 
@@ -280,6 +280,8 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
 
     // 페이지가 완전히 로드될 때까지 대기
     await frame.waitForLoadState('networkidle');
+
+    const currentRound = await this.getCurrentRound(frame);
 
     // 자동번호 발급 버튼 클릭
     await frame.evaluate(() => {
@@ -351,6 +353,37 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
       console.error('첫 번째 확인 팝업 처리 중 오류 발생:', error);
     }
 
+    let extractedNumbers: number[] = [];
+    try {
+      // reportRow 팝업이 나타날 때까지 대기
+      await frame.waitForSelector('#reportRow', { timeout: 10000 });
+
+      // 자동번호 추출
+      extractedNumbers = await frame.evaluate(() => {
+        const reportRow = document.getElementById('reportRow');
+        if (!reportRow) return [];
+
+        const numsDiv = reportRow.querySelector('.nums');
+        if (!numsDiv) return [];
+
+        const numberSpans = numsDiv.querySelectorAll('span');
+        const numbers: number[] = [];
+
+        numberSpans.forEach((span) => {
+          const num = parseInt(span.textContent?.trim() || '0', 10);
+          if (num > 0 && num <= 45) {
+            numbers.push(num);
+          }
+        });
+
+        return numbers;
+      });
+
+      console.log('추출된 자동번호:', extractedNumbers);
+    } catch (error) {
+      console.error('번호 추출 중 오류 발생:', error);
+    }
+
     // 필요한 경우 추가 닫기 버튼 처리
     try {
       await frame.waitForSelector('input[name="closeLayer"]', { timeout: 5000 });
@@ -365,11 +398,38 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
       // 닫기 버튼이 없을 수 있으므로 오류 무시
       console.log('닫기 버튼을 찾을 수 없거나 필요하지 않습니다.');
     }
-
     this._logger.log('로또 자동 구매가 완료되었습니다.');
+    return { purchasedNumbers: [123], round: currentRound };
   }
 
   private _checkAgentStatus() {
     return this.browser && this.page;
+  }
+
+  private async getCurrentRound(frame: Frame): Promise<number> {
+    try {
+      // curRound 요소가 나타날 때까지 대기
+      await frame.waitForSelector('#curRound', { timeout: 10000 });
+
+      const currentRound = await frame.evaluate(() => {
+        const curRound = document.getElementById('curRound');
+        console.log('curRound element:', curRound);
+        console.log('curRound textContent:', curRound?.textContent);
+
+        if (curRound && curRound.textContent) {
+          const roundNumber = Number(curRound.textContent.trim());
+          console.log('Parsed round number:', roundNumber);
+          return roundNumber;
+        }
+        return 0;
+      });
+
+      console.log('Current round from frame:', currentRound);
+
+      return currentRound;
+    } catch (error) {
+      console.error('getCurrentRound 오류:', error);
+      return 0;
+    }
   }
 }

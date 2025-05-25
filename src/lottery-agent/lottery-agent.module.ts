@@ -12,5 +12,6 @@ import { Symbols } from 'src/symbols';
       useClass: LotteryAgentPlayWrightService,
     },
   ],
+  exports: [Symbols.lotteryAgent],
 })
 export class LotteryAgentModule {}

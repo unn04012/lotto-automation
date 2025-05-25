@@ -34,7 +34,7 @@ export interface ILotteryAgentService {
    * 로또 자동 번호로 구매합니다.
    * @param numbers
    */
-  buyLotteryAutomation(): Promise<void>;
+  buyLotteryAutomation(): Promise<{ purchasedNumbers: number[]; round: number }>;
 
   /**
    * 연금 복권을 구매합니다.
