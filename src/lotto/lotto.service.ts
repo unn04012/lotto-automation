@@ -4,6 +4,7 @@ import { Symbols } from 'src/symbols';
 import { UserService } from 'src/user/user.service';
 import { IUserLottoRepository, LottoType } from './repository/user-lotto.repository.interface';
 import { UserLottoEntity } from './domain/user-lotto.entity';
+import { NotificationSlackService } from 'src/notification/notificaiton-slack.service';
 
 @Injectable()
 export class LottoService {
@@ -13,6 +14,7 @@ export class LottoService {
     @Inject(Symbols.lotteryAgent) private readonly _lotteryAgent: ILotteryAgentService,
     private readonly _userService: UserService,
     @Inject(Symbols.userLottoRepository) private readonly _userLottoRepository: IUserLottoRepository,
+    private readonly notificationSlackService: NotificationSlackService,
   ) {}
 
   public async buyLotto() {
@@ -24,15 +26,23 @@ export class LottoService {
 
     const { purchasedNumbers, round } = await this._lotteryAgent.buyLotteryAutomation();
 
+    const purchasedDate = new Date();
+
     const userLottoEntity = UserLottoEntity.create({
       userId: this._userId,
       purchasedNumbers,
-      purchasedDate: new Date(),
+      purchasedDate,
       round,
       lottoType: 'LOTTO',
     });
 
     const userLotto = await this._userLottoRepository.save(userLottoEntity);
+
+    await this.notificationSlackService.sendPurchaseCompletionNotification({
+      purchasedDate,
+      purchasedNumbers,
+      game: '6/45',
+    });
 
     return userLotto.getUserLotto();
   }
@@ -54,6 +64,13 @@ export class LottoService {
 
     for (const user of users) {
       user.setLottoResult(winningNumbers, bonusNumber);
+
+      if (user.rank)
+        await this.notificationSlackService.sendLotteryResultNotification({
+          myNumbers: user.purchasedNumbers,
+          winningNumbers,
+          rank: user.rank,
+        });
 
       await this._userLottoRepository.save(user);
     }
