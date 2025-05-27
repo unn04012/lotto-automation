@@ -1,0 +1,29 @@
+service: lotto-automation
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+  - serverless-attach-managed-policy
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'Dev'}
+  region: ${opt:region, 'ap-northeast-2'}
+
+functions:
+  main:
+    handler: dist/main.handler
+    environment:
+      LOTTO_ID: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/LOTTO_ID}
+      LOTTO_PASSWORD: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/LOTTO_PASSWORD}
+      DYNAMODB_REGION: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/DYNAMODB_REGION}
+      DYNAMODB_ENDPOINT: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/DYNAMODB_ENDPOINT}
+      SLACK_WEBHOOK_URL: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/SLACK_WEBHOOK_URL}
+    events:
+      - http: # root
+          method: ANY
+          path: /
+      - http: # 하위
+          method: ANY
+          path: '{proxy+}'
