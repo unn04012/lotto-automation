@@ -13,7 +13,7 @@ provider:
 
 functions:
   main:
-    handler: dist/src/main.handler
+    handler: dist/main.handler
     environment:
       LOTTO_ID: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/LOTTO_ID}
       LOTTO_PASSWORD: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/LOTTO_PASSWORD}
