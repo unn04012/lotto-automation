@@ -23,13 +23,6 @@ functions:
       API_HEADER_KEY: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/API_HEADER_KEY}
       HTTP_PORT: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/HTTP_PORT}
 
-    events:
-      - http: # root
-          method: ANY
-          path: /
-      - http: # 하위
-          method: ANY
-          path: '{proxy+}'
 package:
   patterns:
     - 'dist/**'
