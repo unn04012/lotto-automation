@@ -72,5 +72,5 @@ jobs:
       - name: serverless deploy
         uses: serverless/github-action@v3.1
         with:
-          args: -c "serverless deploy --stage Prod --region ap-northeast-2"
+          args: -c "serverless plugin install --name serverless-offline && serverless deploy --stage Prod --region ap-northeast-2"
           entrypoint: /bin/sh
