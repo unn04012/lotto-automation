@@ -26,10 +26,10 @@ functions:
       HTTP_PORT: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/HTTP_PORT}
 
     events:
-      - http: # root
+      - httpApi: # root
           method: ANY
           path: /
-      - http: # 하위
+      - httpApi: # 하위
           method: ANY
           path: '{proxy+}'
 package:
