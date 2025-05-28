@@ -31,7 +31,7 @@ functions:
           path: /
       - httpApi: # 하위
           method: ANY
-          path: '{proxy+}'
+          path: /{proxy+}
 package:
   patterns:
     - 'dist/**'
