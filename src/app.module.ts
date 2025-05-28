@@ -5,9 +5,10 @@ import { LotteryAgentModule } from './lottery-agent/lottery-agent.module';
 import { ConfigModule } from '@nestjs/config';
 import { LottoModule } from './lotto/lotto.module';
 import { NotificationModule } from './notification/notificaiton.module';
+import { EncryptionModule } from './encryption/encryption.module';
 
 @Module({
-  imports: [ConfigModule, LotteryAgentModule, LottoModule, NotificationModule],
+  imports: [ConfigModule, LotteryAgentModule, LottoModule, NotificationModule, EncryptionModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -7,9 +7,11 @@ import { UserService } from 'src/user/user.service';
 import { LottoConfigModule } from 'src/config/lotto/lotto-config.module';
 import { DynamoDBConfigModule } from 'src/config/dynamodb/dynamodb-config.module';
 import { LottoController } from './lotto.controller';
+import { NotificationModule } from 'src/notification/notificaiton.module';
+import { EncryptionModule } from 'src/encryption/encryption.module';
 
 @Module({
-  imports: [LottoConfigModule, DynamoDBConfigModule, LotteryAgentModule],
+  imports: [LottoConfigModule, DynamoDBConfigModule, LotteryAgentModule, NotificationModule, EncryptionModule],
   controllers: [LottoController],
   providers: [
     UserService,
