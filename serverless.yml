@@ -1,8 +1,6 @@
 service: lotto-automation
 plugins:
-  - serverless-plugin-typescript
   - serverless-offline
-  - serverless-attach-managed-policy
 frameworkVersion: '3'
 
 provider:
@@ -13,13 +11,18 @@ provider:
 
 functions:
   main:
-    handler: dist/main.handler
+    handler: dist/src/main.handler
     environment:
       LOTTO_ID: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/LOTTO_ID}
       LOTTO_PASSWORD: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/LOTTO_PASSWORD}
       DYNAMODB_REGION: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/DYNAMODB_REGION}
       DYNAMODB_ENDPOINT: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/DYNAMODB_ENDPOINT}
-      SLACK_WEBHOOK_URL: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/SLACK_WEBHOOK_URL}
+      ENCRYPTION_KEY: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/ENCRYPTION_KEY}
+      ENCRYPTION_ALGORITHM: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/ENCRYPTION_ALGORITHM}
+      API_KEY: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/API_KEY}
+      API_HEADER_KEY: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/API_HEADER_KEY}
+      HTTP_PORT: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/HTTP_PORT}
+
     events:
       - http: # root
           method: ANY

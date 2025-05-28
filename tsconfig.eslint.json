@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "es2022"
+  },
+  "include": ["src/**/*", "eslint.config.mjs"]
+}

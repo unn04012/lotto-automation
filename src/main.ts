@@ -1,9 +1,11 @@
 import { NestFactory } from '@nestjs/core';
-import serverlessExpress from '@codegenie/serverless-express';
+// import serverlessExpress from '@codegenie/serverless-express';
 import { Callback, Context, Handler } from 'aws-lambda';
 import { AppModule } from './app.module';
 import { AppConfigService } from './config/app/app.config.service';
 import { ApiKeyGuard } from './guard/api-key.guard';
+
+const serverlessExpress = require('@codegenie/serverless-express');
 
 let server: Handler;
 
