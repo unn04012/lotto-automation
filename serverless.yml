@@ -43,5 +43,4 @@ package:
     - '!jest.config.*' # Jest 설정 제외
     - '!.eslintrc.*' # ESLint 설정 제외
     - '!node_modules/.cache/**'
-    - '!node_modules/**/test/**'
     - '!node_modules/**/*.md'
