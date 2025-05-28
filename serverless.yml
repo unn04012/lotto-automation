@@ -24,6 +24,7 @@ functions:
       API_KEY: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/API_KEY}
       API_HEADER_KEY: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/API_HEADER_KEY}
       HTTP_PORT: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/HTTP_PORT}
+      SLACK_WEBHOOK_URL: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/SLACK_WEBHOOK_URL}
 
     events:
       - httpApi: # root
