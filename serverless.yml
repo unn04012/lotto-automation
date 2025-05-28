@@ -30,3 +30,16 @@ functions:
       - http: # 하위
           method: ANY
           path: '{proxy+}'
+package:
+  patterns:
+    - 'dist/**'
+    - 'node_modules/**'
+    - '!src/**' # 소스 파일 제외
+    - '!test/**' # 테스트 파일 제외
+    - '!*.ts' # TypeScript 파일 제외
+    - '!tsconfig*.json' # TypeScript 설정 제외
+    - '!jest.config.*' # Jest 설정 제외
+    - '!.eslintrc.*' # ESLint 설정 제외
+    - '!node_modules/.cache/**'
+    - '!node_modules/**/test/**'
+    - '!node_modules/**/*.md'
