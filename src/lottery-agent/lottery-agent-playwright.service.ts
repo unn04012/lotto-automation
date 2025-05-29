@@ -27,7 +27,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
     if (!this._checkAgentStatus()) {
       this.browser = await playwright.launch({
         args: Chromium.args,
-        executablePath: await Chromium.executablePath(),
+        executablePath: await Chromium.executablePath('/opt/chromium'),
         headless: true, // 브라우저 화면을 보려면 false로 설정
       });
 
