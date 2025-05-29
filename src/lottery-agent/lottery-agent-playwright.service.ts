@@ -2,7 +2,7 @@ import { Browser, Frame, Page, chromium as playwright } from '@playwright/test';
 import { ILotteryAgentService, LottoResult } from './lottery-agent.service.interface';
 import { Injectable, Logger } from '@nestjs/common';
 
-const Chromium = require('@sparticuz/chromium');
+const Chromium = require('@sparticuz/chromium-min');
 
 @Injectable()
 export class LotteryAgentPlayWrightService implements ILotteryAgentService {
@@ -27,11 +27,13 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
     if (!this._checkAgentStatus()) {
       this.browser = await playwright.launch({
         args: Chromium.args,
-        executablePath: await Chromium.executablePath(),
+        executablePath: await Chromium.executablePath('/opt/nodejs/node_modules/@sparticuz/chromium/bin'),
         headless: true, // 브라우저 화면을 보려면 false로 설정
       });
 
-      const context = await this.browser.newContext();
+      const context = await this.browser.newContext({
+        viewport: { width: 1920, height: 1080 },
+      });
 
       this.page = await context.newPage();
 
