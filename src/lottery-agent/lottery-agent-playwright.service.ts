@@ -27,7 +27,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
     if (!this._checkAgentStatus()) {
       this.browser = await playwright.launch({
         args: Chromium.args,
-        executablePath: await Chromium.executablePath('/opt/chromium'),
+        executablePath: await Chromium.executablePath('/opt/nodejs/node_modules/@sparticuz/chromium/bin'),
         headless: true, // 브라우저 화면을 보려면 false로 설정
       });
 
@@ -37,6 +37,8 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
       });
 
       this.page = await context.newPage();
+
+      this._logger.log('Playwright browser context가 초기화되었습니다.');
     }
   }
 
@@ -79,6 +81,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
    */
   private async _findLatestRoundNumber(page: Page) {
     let currentRound = 0;
+    this._logger.log('current url: ', page.url);
     const roundText = await page.textContent('.win_result strong');
 
     if (roundText) {
