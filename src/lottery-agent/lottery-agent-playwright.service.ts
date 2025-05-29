@@ -82,6 +82,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
   private async _findLatestRoundNumber(page: Page) {
     let currentRound = 0;
     this._logger.log('current url: ', page.url);
+    console.log(page.url);
     const roundText = await page.textContent('.win_result strong');
 
     if (roundText) {
@@ -102,7 +103,8 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
   public async getLottoNumber(round?: number): Promise<LottoResult> {
     await this.initialize();
     const url = `${this._baseUrl}/gameResult.do?method=byWin`;
-
+    this._logger.log(JSON.stringify(this.page));
+    console.log(JSON.stringify(this.page));
     await this.page.goto(url);
 
     let currentRound: number;
