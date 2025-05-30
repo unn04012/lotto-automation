@@ -16,8 +16,6 @@ RUN npm run build
 FROM --platform=linux/amd64 public.ecr.aws/lambda/nodejs:22
 
 # Chromium 실행에 필요한 시스템 의존성 설치
-
-# Install Dependencies for AL2023 to run Playwright
 RUN dnf -y install \
     nss \
     dbus \
@@ -33,7 +31,7 @@ RUN dnf -y install \
     pango \
     alsa-lib
 
-# 빌드된 NestJS 앱 복사
+# 빌드된 NestJS 앱 전체 복사 (dist 폴더 전체)
 COPY --from=builder /app/dist ${LAMBDA_TASK_ROOT}/dist
 COPY --from=builder /app/package*.json ${LAMBDA_TASK_ROOT}/
 
@@ -47,11 +45,9 @@ RUN npm ci --only=production
 # Playwright 및 Chromium 설치
 RUN npx playwright install chromium
 
-# Lambda 핸들러 복사
-COPY --from=builder /app/dist/main.js ./
 
 # 환경변수 설정
 ENV NODE_ENV=production
 
-# Lambda 핸들러 실행
-CMD [ "main.handler" ]
+# Lambda 핸들러 실행 (dist/main.handler로 변경)
+CMD [ "dist/main.handler" ]
