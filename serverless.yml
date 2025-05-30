@@ -12,6 +12,7 @@ provider:
     images:
       lotto-app:
         uri: ${env:ECR_IMAGE_URI}
+      platform: linux/arm64
   httpApi:
     id: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/HTTP_API_ID}
 
