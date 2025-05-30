@@ -67,10 +67,6 @@ jobs:
       - name: Install Serverless CLI
         run: npm install -g serverless
 
-      - name: Install Serverless plugins
-        run: |
-          serverless plugin install --name serverless-offline@12.0.4
-
       - name: serverless deploy
         uses: serverless/github-action@v3.1
         with:
