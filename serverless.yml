@@ -12,7 +12,6 @@ provider:
     images:
       lotto-app:
         uri: ${env:ECR_IMAGE_URI}
-      platform: linux/amd64
   httpApi:
     id: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/HTTP_API_ID}
 
@@ -22,7 +21,6 @@ functions:
       name: lotto-app
       command:
         - 'dist/main.handler'
-      architecture: arm64
     timeout: 90
     #layers:
     # - ${env:CHROMIUM_LAYER_ARN}
