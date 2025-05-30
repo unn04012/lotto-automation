@@ -32,34 +32,30 @@ jobs:
         with:
           mask-password: true # ECR 토큰 마스킹
 
-      - name: Build, tag, and push image to Amazon ECR
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Set image URI for deployment
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          # Docker 이미지 빌드
-          echo "🔨 Building Docker image..."
-          if docker build --platform linux/arm64 -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .; then
-            echo "✅ Docker build successful"
-          else
-            echo "❌ Docker build failed"
-            exit 1
-          fi
-
-          # ECR에 푸시
-          echo "📤 Pushing image to ECR..."
-          if docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest; then
-            echo "✅ Docker push successful"
-          else
-            echo "❌ Docker push failed"
-            exit 1
-          fi
-
-          # 이미지 URI를 환경변수로 저장 (URI는 마스킹)
           IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:latest"
           echo "::add-mask::$IMAGE_URI"
           echo "image=$IMAGE_URI" >> $GITHUB_OUTPUT
-
           echo "🎉 Build and push completed successfully"
 
       - name: Setup Node.js

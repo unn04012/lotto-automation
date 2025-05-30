@@ -1,5 +1,5 @@
 # Stage 1: 빌드 스테이지 (NestJS 컴파일)
-FROM --platform=linux/arm64 public.ecr.aws/lambda/nodejs:22 AS builder
+FROM --platform=linux/amd64 public.ecr.aws/lambda/nodejs:22 AS builder
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ RUN npm run build
 
 # Stage 2: 최종 런타임 스테이지 (Lambda)
 # NoddeJS 20 (Amazon linux 2023 "AL2023")
-FROM --platform=linux/arm64 public.ecr.aws/lambda/nodejs:22
+FROM --platform=linux/amd64 public.ecr.aws/lambda/nodejs:22
 
 # Chromium 실행에 필요한 시스템 의존성 설치
 
