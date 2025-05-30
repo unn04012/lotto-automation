@@ -26,8 +26,6 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
   public async initialize(): Promise<void> {
     if (!this._checkAgentStatus()) {
       this.browser = await playwright.launch({
-        args: Chromium.args,
-        executablePath: await Chromium.executablePath('/opt/nodejs/node_modules/@sparticuz/chromium/bin'),
         headless: true, // 브라우저 화면을 보려면 false로 설정
       });
 
@@ -81,7 +79,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
   private async _findLatestRoundNumber(page: Page) {
     let currentRound = 0;
     this._logger.log('current url: ', page.url);
-    console.log(page.url);
+    this._logger.log(page.url);
     const roundText = await page.textContent('.win_result strong');
 
     if (roundText) {
@@ -103,7 +101,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
     await this.initialize();
     const url = `${this._baseUrl}/gameResult.do?method=byWin`;
     this._logger.log(JSON.stringify(this.page));
-    console.log(JSON.stringify(this.page));
+
     await this.page.goto(url);
 
     let currentRound: number;
@@ -119,7 +117,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
           select.value = roundValue;
           const event = new Event('change', { bubbles: true });
           select.dispatchEvent(event);
-          console.log('find select');
+          this._logger.log('find select');
         }
 
         // hidden input 값도 업데이트
@@ -263,7 +261,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
     } catch (error) {
       await frame.waitForSelector('#btnBuy', { timeout: 10000 });
       // 닫기 버튼이 없을 수 있으므로 오류 무시
-      console.log('닫기 버튼을 찾을 수 없거나 필요하지 않습니다.');
+      this._logger.log('닫기 버튼을 찾을 수 없거나 필요하지 않습니다.');
     }
 
     await this.page.close();
@@ -297,7 +295,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
     // 자동번호 발급 버튼 클릭
     await frame.evaluate(() => {
       const autoButton = document.getElementById('num2');
-      console.log(autoButton);
+      this._logger.log(autoButton);
       if (autoButton) autoButton.click();
     });
 
@@ -327,16 +325,16 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
       const buttons = Array.from(document.querySelectorAll('input[type="button"][value="확인"]'));
       const filteredButtons = buttons.filter((button) => button.id !== 'btnSelectNum');
 
-      console.log('필터링된 확인 버튼 수:', filteredButtons.length);
+      this._logger.log('필터링된 확인 버튼 수:', filteredButtons.length);
 
       if (filteredButtons.length > 0) {
-        console.log('확인 버튼 클릭 (btnSelectNum 제외)');
+        this._logger.log('확인 버튼 클릭 (btnSelectNum 제외)');
         const button = filteredButtons[0] as HTMLElement;
         button.click();
         return true;
       }
 
-      console.log('적절한 확인 버튼을 찾을 수 없음');
+      this._logger.log('적절한 확인 버튼을 찾을 수 없음');
       return false;
     });
 
@@ -390,7 +388,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
         return numbers;
       });
 
-      console.log('추출된 자동번호:', extractedNumbers);
+      this._logger.log('추출된 자동번호:', extractedNumbers);
     } catch (error) {
       console.error('번호 추출 중 오류 발생:', error);
     }
@@ -407,7 +405,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
     } catch (error) {
       await frame.waitForSelector('#btnBuy', { timeout: 10000 });
       // 닫기 버튼이 없을 수 있으므로 오류 무시
-      console.log('닫기 버튼을 찾을 수 없거나 필요하지 않습니다.');
+      this._logger.log('닫기 버튼을 찾을 수 없거나 필요하지 않습니다.');
     }
     this._logger.log('로또 자동 구매가 완료되었습니다.');
     return { purchasedNumbers: [123], round: currentRound };
@@ -425,18 +423,18 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
 
       const currentRound = await frame.evaluate(() => {
         const curRound = document.getElementById('curRound');
-        console.log('curRound element:', curRound);
-        console.log('curRound textContent:', curRound?.textContent);
+        this._logger.log('curRound element:', curRound);
+        this._logger.log('curRound textContent:', curRound?.textContent);
 
         if (curRound && curRound.textContent) {
           const roundNumber = Number(curRound.textContent.trim());
-          console.log('Parsed round number:', roundNumber);
+          this._logger.log('Parsed round number:', roundNumber);
           return roundNumber;
         }
         return 0;
       });
 
-      console.log('Current round from frame:', currentRound);
+      this._logger.log('Current round from frame:', currentRound);
 
       return currentRound;
     } catch (error) {

@@ -8,6 +8,10 @@ provider:
   runtime: nodejs18.x
   stage: ${opt:stage, 'Dev'}
   region: ${opt:region, 'ap-northeast-2'}
+  ecr:
+    images:
+      lotto-app:
+        uri: ${env:ECR_IMAGE_URI}
   httpApi:
     id: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/HTTP_API_ID}
 
@@ -15,8 +19,8 @@ functions:
   main:
     handler: dist/main.handler
     timeout: 90
-    layers:
-      - ${env:CHROMIUM_LAYER_ARN}
+    #layers:
+    # - ${env:CHROMIUM_LAYER_ARN}
     environment:
       LOTTO_ID: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/LOTTO_ID}
       LOTTO_PASSWORD: ${ssm(ap-northeast-2):/LOTTO_AUTOMATION/LOTTO_PASSWORD}
