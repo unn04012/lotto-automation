@@ -21,6 +21,7 @@ functions:
       name: lotto-app
       command:
         - 'dist/main.handler'
+      platform: linux/amd64
     timeout: 90
     #layers:
     # - ${env:CHROMIUM_LAYER_ARN}
