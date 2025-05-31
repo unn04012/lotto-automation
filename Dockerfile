@@ -42,12 +42,12 @@ WORKDIR ${LAMBDA_TASK_ROOT}
 # 프로덕션 의존성 설치
 RUN npm ci --only=production
 
-# Playwright 및 Chromium 설치
-RUN npx playwright install chromium
-
+# Hermetic install: node_modules/playwright-core/.local-browsers에 브라우저 설치
+RUN PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium
 
 # 환경변수 설정
 ENV NODE_ENV=production
+ENV PLAYWRIGHT_BROWSERS_PATH=0
 
 # Lambda 핸들러 실행 (dist/main.handler로 변경)
 CMD [ "dist/main.handler" ]
