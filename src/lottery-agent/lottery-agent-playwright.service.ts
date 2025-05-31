@@ -2,8 +2,6 @@ import { Browser, Frame, Page, chromium as playwright } from '@playwright/test';
 import { ILotteryAgentService, LottoResult } from './lottery-agent.service.interface';
 import { Injectable, Logger } from '@nestjs/common';
 
-const Chromium = require('@sparticuz/chromium-min');
-
 @Injectable()
 export class LotteryAgentPlayWrightService implements ILotteryAgentService {
   /**
@@ -28,9 +26,11 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
       this.browser = await playwright.launch({
         headless: true, // 브라우저 화면을 보려면 false로 설정
       });
+      this._logger.log('successfully launched Playwright browser');
 
       const context = await this.browser.newContext({
         viewport: { width: 1920, height: 1080 },
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
       });
 
       this.page = await context.newPage();
