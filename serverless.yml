@@ -22,7 +22,7 @@ functions:
       name: lotto-app
       command:
         - 'dist/main.handler'
-    timeout: 90
+    timeout: 180
     #layers:
     # - ${env:CHROMIUM_LAYER_ARN}
     environment:
