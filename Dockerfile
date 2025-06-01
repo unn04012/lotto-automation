@@ -31,7 +31,6 @@ RUN dnf -y install \
     pango \
     alsa-lib \
     liberation-fonts \
-    libappindicator-gtk3 \
     gdk-pixbuf2 \
     nspr \
     pciutils \
