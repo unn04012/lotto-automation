@@ -24,7 +24,20 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
   public async initialize(): Promise<void> {
     if (!this._checkAgentStatus()) {
       this.browser = await playwright.launch({
-        headless: true, // 브라우저 화면을 보려면 false로 설정
+        headless: true, // 브라우저 화면을 보려면 false로 설정,
+        args: [
+          '--disable-gpu',
+          '--disable-gpu-sandbox',
+          '--disable-software-rasterizer',
+          '--disable-accelerated-2d-canvas',
+          '--disable-accelerated-jpeg-decoding',
+          '--disable-accelerated-mjpeg-decode',
+          '--disable-accelerated-video-decode',
+          '--disable-accelerated-video-encode',
+          '--use-gl=swiftshader',
+          '--use-angle=swiftshader',
+          '--disable-font-subpixel-positioning',
+        ],
       });
       this._logger.log('successfully launched Playwright browser');
 
