@@ -26,6 +26,8 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
       this.browser = await playwright.launch({
         headless: true, // 브라우저 화면을 보려면 false로 설정,
         args: [
+          '--single-process',
+          '--disable-dev-shm-usage',
           '--disable-gpu',
           '--disable-gpu-sandbox',
           '--disable-software-rasterizer',
