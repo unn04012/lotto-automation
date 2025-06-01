@@ -1,5 +1,5 @@
 # Stage 1: 빌드 스테이지 (NestJS 컴파일)
-FROM --platform=linux/amd64 public.ecr.aws/lambda/nodejs:22 AS builder
+FROM --platform=linux/amd64 mcr.microsoft.com/playwright:v1.52.0-noble AS builder
 
 WORKDIR /app
 
