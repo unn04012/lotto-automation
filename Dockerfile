@@ -13,7 +13,7 @@ RUN npm run build
 
 # Stage 2: 최종 런타임 스테이지 (Lambda)
 # NoddeJS 20 (Amazon linux 2023 "AL2023")
-FROM --platform=linux/amd64 public.ecr.aws/lambda/nodejs:22
+FROM --platform=linux/amd64 public.ecr.aws/lambda/nodejs:20
 
 # Chromium 실행에 필요한 시스템 의존성 설치
 RUN dnf -y install \
@@ -35,6 +35,9 @@ RUN dnf -y install \
 COPY --from=builder /app/dist ${LAMBDA_TASK_ROOT}/dist
 COPY --from=builder /app/package*.json ${LAMBDA_TASK_ROOT}/
 
+# **핵심: Playwright 브라우저 복사**
+COPY --from=builder /ms-playwright ${LAMBDA_TASK_ROOT}/ms-playwright
+
 RUN chmod 755 -R ${LAMBDA_TASK_ROOT}
 
 WORKDIR ${LAMBDA_TASK_ROOT}
@@ -43,11 +46,11 @@ WORKDIR ${LAMBDA_TASK_ROOT}
 RUN npm ci --only=production
 
 # Hermetic install: node_modules/playwright-core/.local-browsers에 브라우저 설치
-RUN PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium
+# RUN PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium
 
 # 환경변수 설정
 ENV NODE_ENV=production
-ENV PLAYWRIGHT_BROWSERS_PATH=0
+ENV PLAYWRIGHT_BROWSERS_PATH=${LAMBDA_TASK_ROOT}/ms-playwright
 
 # Lambda 핸들러 실행 (dist/main.handler로 변경)
 CMD [ "dist/main.handler" ]

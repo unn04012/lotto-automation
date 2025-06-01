@@ -38,6 +38,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
           '--use-angle=swiftshader',
           '--disable-font-subpixel-positioning',
         ],
+        executablePath: process.env.PLAYWRIGHT_BROWSERS_PATH ? `${process.env.PLAYWRIGHT_BROWSERS_PATH}/chromium-*/chrome-linux/chrome` : undefined,
       });
       this._logger.log('successfully launched Playwright browser');
 
