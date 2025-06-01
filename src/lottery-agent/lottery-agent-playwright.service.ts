@@ -225,7 +225,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
         // 짧은 대기 시간 추가
         await frame.waitForTimeout(200);
       } catch (error) {
-        console.error(`번호 ${num} 선택 중 오류 발생:`, error);
+        this._logger.error(`번호 ${num} 선택 중 오류 발생:`, error);
       }
     }
 
@@ -277,7 +277,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
       // 클릭 후 잠시 대기
       await frame.waitForTimeout(1000);
     } catch (error) {
-      console.error('첫 번째 확인 팝업 처리 중 오류 발생:', error);
+      this._logger.error('첫 번째 확인 팝업 처리 중 오류 발생:', error);
     }
 
     // 필요한 경우 추가 닫기 버튼 처리
@@ -390,7 +390,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
       // 클릭 후 잠시 대기
       await frame.waitForTimeout(1000);
     } catch (error) {
-      console.error('첫 번째 확인 팝업 처리 중 오류 발생:', error);
+      this._logger.error('첫 번째 확인 팝업 처리 중 오류 발생:', error);
     }
 
     let extractedNumbers: number[] = [];
@@ -421,7 +421,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
 
       this._logger.log('추출된 자동번호:', extractedNumbers);
     } catch (error) {
-      console.error('번호 추출 중 오류 발생:', error);
+      this._logger.error('번호 추출 중 오류 발생:', error);
     }
 
     // 필요한 경우 추가 닫기 버튼 처리
@@ -469,7 +469,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
 
       return currentRound;
     } catch (error) {
-      console.error('getCurrentRound 오류:', error);
+      this._logger.error('getCurrentRound 오류:', error);
       return 0;
     }
   }
