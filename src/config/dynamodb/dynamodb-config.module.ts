@@ -3,13 +3,13 @@ import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import configuration from './dynamodb-configuration';
 import { DynamoDBConfigService } from './dynamodb-config.service';
+import { AppConfigModule } from '../app/app.config.module';
 
 /**
  * Import and provide app configuration related classes.
  *
  * @module
  */
-@Global()
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -20,6 +20,7 @@ import { DynamoDBConfigService } from './dynamodb-config.service';
         DYNAMODB_ENDPOINT: Joi.string().required(),
       }),
     }),
+    AppConfigModule,
   ],
   providers: [DynamoDBConfigService],
   exports: [DynamoDBConfigService],

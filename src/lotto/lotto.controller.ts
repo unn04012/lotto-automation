@@ -15,4 +15,9 @@ export class LottoController {
   public async getUserLotto(@Param('type') type: LottoType, @Query('round') round?: string) {
     return this.lottoService.getUserLotto(type, round);
   }
+
+  @Post('check-results')
+  public async updateUser() {
+    return this.lottoService.updateUserLottoRank('LOTTO');
+  }
 }
