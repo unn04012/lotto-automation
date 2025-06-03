@@ -55,18 +55,157 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
           '--no-pings',
           '--use-gl=swiftshader',
           '--window-size=1280,1696',
+
+          // 모바일 감지 방지를 위한 추가 옵션
+          '--disable-blink-features=AutomationControlled',
+          '--disable-features=VizDisplayCompositor',
         ],
       });
       this._logger.log('successfully launched Playwright browser');
 
       const context = await this.browser.newContext({
         viewport: { width: 1920, height: 1080 },
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        extraHTTPHeaders: {
+          'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
       });
 
       this.page = await context.newPage();
 
-      this._logger.log('Playwright browser context가 초기화되었습니다.');
+      // 🔥 핵심: 모바일 리다이렉트를 네트워크 레벨에서 차단
+      await this.page.route('**/*', (route) => {
+        const url = route.request().url();
+
+        // 모바일 사이트로의 모든 요청을 데스크톱으로 변경
+        if (url.includes('m.dhlottery.co.kr')) {
+          const desktopUrl = url.replace('m.dhlottery.co.kr', 'www.dhlottery.co.kr');
+          this._logger.log(`🔄 모바일 URL을 데스크톱으로 변경: ${url} -> ${desktopUrl}`);
+          route.continue({ url: desktopUrl });
+        } else {
+          route.continue();
+        }
+      });
+
+      // 🔥 JavaScript 리다이렉트 차단
+      await this.page.addInitScript(() => {
+        // 모든 location 변경을 차단
+        const originalAssign = window.location.assign;
+        const originalReplace = window.location.replace;
+
+        window.location.assign = function (url: string) {
+          if (typeof url === 'string' && url.includes('m.dhlottery.co.kr')) {
+            console.log('🚫 모바일 리다이렉트 차단 (assign):', url);
+            return;
+          }
+          return originalAssign.call(this, url);
+        };
+
+        window.location.replace = function (url: string) {
+          if (typeof url === 'string' && url.includes('m.dhlottery.co.kr')) {
+            console.log('🚫 모바일 리다이렉트 차단 (replace):', url);
+            return;
+          }
+          return originalReplace.call(this, url);
+        };
+
+        // href 설정 차단
+        let originalHref = window.location.href;
+        try {
+          Object.defineProperty(window.location, 'href', {
+            get: function () {
+              return originalHref;
+            },
+            set: function (url: string) {
+              if (typeof url === 'string' && url.includes('m.dhlottery.co.kr')) {
+                console.log('🚫 모바일 리다이렉트 차단 (href):', url);
+                return;
+              }
+              originalHref = url;
+              window.location.assign(url);
+            },
+            configurable: true,
+          });
+        } catch (e) {
+          console.log('href 차단 설정 실패:', e);
+        }
+
+        // 모바일 감지 변수들 조작
+        try {
+          Object.defineProperty(navigator, 'userAgent', {
+            get: () => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            configurable: true,
+          });
+        } catch (e) {}
+
+        try {
+          Object.defineProperty(navigator, 'platform', {
+            get: () => 'Win32',
+            configurable: true,
+          });
+        } catch (e) {}
+
+        try {
+          Object.defineProperty(navigator, 'maxTouchPoints', {
+            get: () => 0,
+            configurable: true,
+          });
+        } catch (e) {}
+
+        try {
+          Object.defineProperty(screen, 'width', {
+            get: () => 1920,
+            configurable: true,
+          });
+        } catch (e) {}
+
+        try {
+          Object.defineProperty(screen, 'height', {
+            get: () => 1080,
+            configurable: true,
+          });
+        } catch (e) {}
+
+        // 터치 이벤트 지원 제거 (안전한 방법)
+        try {
+          (window as any).TouchEvent = undefined;
+          (window as any).ontouchstart = undefined;
+          (window as any).ontouchend = undefined;
+          (window as any).ontouchmove = undefined;
+        } catch (e) {
+          // 무시
+        }
+
+        // 미디어 쿼리 조작
+        if (window.matchMedia) {
+          const originalMatchMedia = window.matchMedia;
+          try {
+            window.matchMedia = function (query: string): MediaQueryList {
+              if (query.toLowerCase().includes('max-width') || query.toLowerCase().includes('mobile') || query.toLowerCase().includes('touch')) {
+                // 완전한 MediaQueryList 객체 모킹
+                return {
+                  matches: false,
+                  media: query,
+                  onchange: null,
+                  addListener: () => {},
+                  removeListener: () => {},
+                  addEventListener: () => {},
+                  removeEventListener: () => {},
+                  dispatchEvent: () => false,
+                } as MediaQueryList;
+              }
+              return originalMatchMedia.call(window, query);
+            };
+          } catch (e) {
+            console.log('matchMedia 설정 실패:', e);
+          }
+        }
+      });
+
+      this._logger.log('모바일 리다이렉트 차단 설정 완료');
     }
   }
 
@@ -109,10 +248,14 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
    */
   private async _findLatestRoundNumber(page: Page) {
     let currentRound = 0;
-    this._logger.log('current url: ', page.url());
-    this._logger.log(page.url());
-    const roundText = await page.textContent('.win_result strong');
 
+    this._logger.log(page.url());
+    const roundText = await page.evaluate(() => {
+      const element = document.querySelector('.win_result strong');
+      return element?.textContent || '';
+    });
+    this._logger.log(page.isClosed());
+    this._logger.log(roundText);
     if (roundText) {
       const roundMatch = roundText.match(/(\d+)회/); // [ '1170회', '1170', index: 0, input: '1170회', groups: undefined ]
 
@@ -130,10 +273,59 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
 
   public async getLottoNumber(round?: number): Promise<LottoResult> {
     await this.initialize();
-    const url = `${this._baseUrl}/gameResult.do?method=byWin`;
-    this._logger.log(JSON.stringify(this.page));
 
-    await this.page.goto(url);
+    const url = `${this._baseUrl}/gameResult.do?method=byWin`;
+
+    this._logger.log(`접속 시도할 URL: ${url}`);
+
+    // 1차 시도: 일반적인 방법
+    let response = await this.page.goto(url, {
+      waitUntil: 'networkidle',
+      timeout: 30000,
+    });
+
+    this._logger.log(`1차 응답: ${response?.status()}`);
+    this._logger.log(`1차 최종 URL: ${this.page.url()}`);
+
+    if (this.page.url().includes('m.dhlottery.co.kr')) {
+      this._logger.warn('모바일 사이트로 리다이렉트됨. 강제로 데스크톱 사이트로 이동합니다.');
+
+      // 강제로 데스크톱 사이트 접속 시도
+      await this._forceDesktopSite();
+
+      response = await this.page.goto(url, {
+        waitUntil: 'networkidle',
+        timeout: 30000,
+      });
+
+      this._logger.log(`2차 응답: ${response?.status()}`);
+      this._logger.log(`2차 최종 URL: ${this.page.url()}`);
+
+      // 여전히 모바일이라면 쿠키와 로컬스토리지 클리어 후 재시도
+      if (this.page.url().includes('m.dhlottery.co.kr')) {
+        this._logger.warn('여전히 모바일 사이트입니다. 쿠키를 클리어하고 재시도합니다.');
+
+        await this.page.context().clearCookies();
+        await this.page.evaluate(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+        });
+
+        await this._forceDesktopSite();
+
+        response = await this.page.goto(url, {
+          waitUntil: 'networkidle',
+          timeout: 30000,
+        });
+
+        this._logger.log(`3차 응답: ${response?.status()}`);
+        this._logger.log(`3차 최종 URL: ${this.page.url()}`);
+      }
+    }
+
+    if (!response || !response.ok()) {
+      throw new Error(`로또 번호 조회 페이지로 이동 실패: ${response?.status()}`);
+    }
 
     let currentRound: number;
 
@@ -472,5 +664,51 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
       this._logger.error('getCurrentRound 오류:', error);
       return 0;
     }
+  }
+
+  private async _forceDesktopSite(): Promise<void> {
+    // 데스크톱 사이트 강제 접속을 위한 추가 조치
+    this._logger.log('데스크톱 사이트 강제 접속 시도...');
+
+    // 새로운 컨텍스트로 재시도
+    await this.page.setViewportSize({ width: 1920, height: 1080 });
+
+    // 쿠키에 데스크톱 선호 설정 추가
+    await this.page.context().addCookies([
+      {
+        name: 'device_type',
+        value: 'desktop',
+        domain: '.dhlottery.co.kr',
+        path: '/',
+      },
+      {
+        name: 'mobile_redirect',
+        value: 'false',
+        domain: '.dhlottery.co.kr',
+        path: '/',
+      },
+    ]);
+
+    // JavaScript로 추가 설정
+    await this.page.evaluate(() => {
+      // 로컬스토리지에 데스크톱 선호 설정
+      if (typeof Storage !== 'undefined') {
+        localStorage.setItem('preferred_site', 'desktop');
+        localStorage.setItem('force_desktop', 'true');
+        sessionStorage.setItem('device_type', 'desktop');
+      }
+
+      // 추가적인 모바일 감지 변수들 조작
+      if (window.navigator) {
+        Object.defineProperty(window.navigator, 'userAgentData', {
+          get: () => ({
+            mobile: false,
+            platform: 'Windows',
+          }),
+        });
+      }
+    });
+
+    await this.page.waitForTimeout(1000);
   }
 }
