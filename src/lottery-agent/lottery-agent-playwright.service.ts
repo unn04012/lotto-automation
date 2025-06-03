@@ -562,7 +562,6 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
         return true;
       }
 
-      this._logger.log('적절한 확인 버튼을 찾을 수 없음');
       return false;
     });
 
@@ -636,7 +635,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
       this._logger.log('닫기 버튼을 찾을 수 없거나 필요하지 않습니다.');
     }
     this._logger.log('로또 자동 구매가 완료되었습니다.');
-    return { purchasedNumbers: [123], round: currentRound };
+    return { purchasedNumbers: extractedNumbers, round: currentRound };
   }
 
   private _checkAgentStatus() {
