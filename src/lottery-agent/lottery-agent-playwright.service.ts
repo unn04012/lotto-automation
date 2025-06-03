@@ -1,6 +1,8 @@
-import { Browser, Frame, Page, chromium as playwright } from '@playwright/test';
+import { Browser, Frame, Page } from '@playwright/test';
 import { ILotteryAgentService, LottoResult } from './lottery-agent.service.interface';
 import { Injectable, Logger } from '@nestjs/common';
+const playwright = require('playwright-core');
+const chromium = require('chrome-aws-lambda'); // chrome-aws-lambda 모듈을 가져옵니다.
 
 @Injectable()
 export class LotteryAgentPlayWrightService implements ILotteryAgentService {
@@ -23,39 +25,10 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
    */
   public async initialize(): Promise<void> {
     if (!this._checkAgentStatus()) {
-      this.browser = await playwright.launch({
-        headless: true, // 브라우저 화면을 보려면 false로 설정,
-        args: [
-          '--disable-gpu',
-          '--no-sandbox',
-          '--single-process',
-          '--disable-dev-shm-usage',
-          '--no-zygote',
-          '--disable-setuid-sandbox',
-          '--disable-accelerated-2d-canvas',
-          '--disable-dev-shm-usage',
-          '--no-first-run',
-          '--no-default-browser-check',
-          '--disable-background-networking',
-          '--disable-background-timer-throttling',
-          '--disable-client-side-phishing-detection',
-          '--disable-component-update',
-          '--disable-default-apps',
-          '--disable-domain-reliability',
-          '--disable-features=AudioServiceOutOfProcess',
-          '--disable-hang-monitor',
-          '--disable-ipc-flooding-protection',
-          '--disable-popup-blocking',
-          '--disable-prompt-on-repost',
-          '--disable-renderer-backgrounding',
-          '--disable-sync',
-          '--force-color-profile=srgb',
-          '--metrics-recording-only',
-          '--mute-audio',
-          '--no-pings',
-          '--use-gl=swiftshader',
-          '--window-size=1280,1696',
-        ],
+      this.browser = await playwright.chromium.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath,
+        headless: chromium.headless,
       });
       this._logger.log('successfully launched Playwright browser');
 
