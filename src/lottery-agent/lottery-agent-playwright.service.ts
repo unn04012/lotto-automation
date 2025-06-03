@@ -109,8 +109,8 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
    */
   private async _findLatestRoundNumber(page: Page) {
     let currentRound = 0;
-    this._logger.log('current url: ', page.url);
-    this._logger.log(page.url);
+    this._logger.log('current url: ', page.url());
+    this._logger.log(page.url());
     const roundText = await page.textContent('.win_result strong');
 
     if (roundText) {

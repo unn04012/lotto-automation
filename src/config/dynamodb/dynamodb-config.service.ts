@@ -19,7 +19,6 @@ export class DynamoDBConfigService {
   get client() {
     const client = new DynamoDBClient({
       region: this.region,
-      endpoint: this.endpoint,
     });
 
     return client;
