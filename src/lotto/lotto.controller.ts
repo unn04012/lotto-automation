@@ -2,7 +2,7 @@ import { Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { LottoService } from './lotto.service';
 import { LottoType } from './repository/user-lotto.repository.interface';
 
-@Controller('lotto')
+@Controller('prod/lotto')
 export class LottoController {
   constructor(private readonly lottoService: LottoService) {}
 

@@ -28,12 +28,7 @@ async function bootstrap() {
     });
   } else {
     const expressApp = app.getHttpAdapter().getInstance();
-    expressApp.use((req, res, next) => {
-      if (req.url.startsWith('/prod')) {
-        req.url = req.url.replace('/prod', '') || '/';
-      }
-      next();
-    });
+
     return serverlessExpress({ app: expressApp });
   }
 }
