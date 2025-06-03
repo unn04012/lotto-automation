@@ -76,7 +76,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
 
       this.page = await context.newPage();
 
-      // 🔥 핵심: 모바일 리다이렉트를 네트워크 레벨에서 차단
+      // // 🔥 핵심: 모바일 리다이렉트를 네트워크 레벨에서 차단
       await this.page.route('**/*', (route) => {
         const url = route.request().url();
 
@@ -217,18 +217,27 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
 
     this._logger.log('동행복권 로그인 페이지로 이동 중...');
 
-    await this.page.goto(loginPageUrl);
+    const response = await this.page.goto(loginPageUrl, {
+      waitUntil: 'domcontentloaded',
+    });
+    this._logger.log(`response status: ${response?.status()}`);
+    this._logger.log(`login final URL: ${this.page.url()}`);
 
     await this.page.fill('#userId', id);
     await this.page.fill('input[type="password"]', password);
 
     // 로그인 버튼 클릭
-    await this.page.click('.btn_common.lrg.blu');
+    // this.page.on('dialog', async (dialog) => {
+    //   .log('Alert 메시지:', dialog.message());
+    //   await dialog.accept(); // 또는 dialog.dismiss()
+    // });
+    await this.page.click('.btn_common.lrg.blu', { clickCount: 1 });
 
     // 로그인 성공 확인
     try {
       // 5초 동안 로그인 성공 여부 확인
-      await this.page.waitForSelector('.gnb_person_box', { timeout: 5000 });
+      await this.page.waitForSelector('ul.information', { timeout: 5000 });
+
       this._logger.log('로그인 성공!');
     } catch (error) {
       // 로그인 실패 확인 (에러 메시지 확인)
@@ -518,7 +527,6 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
     // 자동번호 발급 버튼 클릭
     await frame.evaluate(() => {
       const autoButton = document.getElementById('num2');
-      this._logger.log(autoButton);
       if (autoButton) autoButton.click();
     });
 
@@ -548,10 +556,7 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
       const buttons = Array.from(document.querySelectorAll('input[type="button"][value="확인"]'));
       const filteredButtons = buttons.filter((button) => button.id !== 'btnSelectNum');
 
-      this._logger.log('필터링된 확인 버튼 수:', filteredButtons.length);
-
       if (filteredButtons.length > 0) {
-        this._logger.log('확인 버튼 클릭 (btnSelectNum 제외)');
         const button = filteredButtons[0] as HTMLElement;
         button.click();
         return true;
@@ -646,12 +651,10 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
 
       const currentRound = await frame.evaluate(() => {
         const curRound = document.getElementById('curRound');
-        this._logger.log('curRound element:', curRound);
-        this._logger.log('curRound textContent:', curRound?.textContent);
 
         if (curRound && curRound.textContent) {
           const roundNumber = Number(curRound.textContent.trim());
-          this._logger.log('Parsed round number:', roundNumber);
+
           return roundNumber;
         }
         return 0;
