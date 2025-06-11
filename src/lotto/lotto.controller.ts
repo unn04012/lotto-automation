@@ -8,8 +8,7 @@ export class LottoController {
 
   @Post()
   public async buyLotto() {
-    // await this.lottoService.buyLotto();
-    return;
+    await this.lottoService.buyLotto();
   }
 
   @Get('type/:type')
