@@ -23,6 +23,7 @@ functions:
       command:
         - 'dist/main.handler'
     timeout: 180
+    url: true
     #layers:
     # - ${env:CHROMIUM_LAYER_ARN}
     environment:
