@@ -65,12 +65,11 @@ export class LottoService {
     for (const user of users) {
       user.setLottoResult(winningNumbers, bonusNumber);
 
-      if (user.rank)
-        await this.notificationSlackService.sendLotteryResultNotification({
-          myNumbers: user.purchasedNumbers,
-          winningNumbers,
-          rank: user.rank,
-        });
+      await this.notificationSlackService.sendLotteryResultNotification({
+        myNumbers: user.purchasedNumbers,
+        winningNumbers,
+        rank: user.rank || 0,
+      });
 
       await this._userLottoRepository.save(user);
     }
