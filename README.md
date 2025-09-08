@@ -1,60 +1,56 @@
-# Lotto Automation
+# 로또 자동화
 
-An automation project for purchasing and checking Korean Lotto 6/45 tickets.
+AWS Lambda와 Serverless Framework를 활용한 한국 로또 6/45 자동 구매 및 당첨 확인 프로젝트입니다.
 
-## Project Overview
+## 프로젝트 개요
 
-This project automates the following tasks on the [Korean Lottery (Dong Hang Bok-kwon)](https://dhlottery.co.kr) website:
+이 프로젝트는 [동행복권](https://dhlottery.co.kr) 웹사이트에서 다음 작업들을 자동화합니다:
 
-- Login
-- Lottery ticket purchase
-- Winning number lookup
-- Prize checking
+- 로그인
+- 로또 티켓 구매
+- 당첨번호 조회
+- 당첨금 확인
 
-## Tech Stack
+## 기술 스택
 
-- **Web Automation**: Playwright
-- **Server**: AWS ECS-EC2
-- **Database**: DynamoDB
-- **Language**: JavaScript/TypeScript
-- **Containerization**: Docker
+- **웹 자동화**: Playwright
+- **인프라**: AWS Lambda, ,API Gateway, AWS Parameter Store
+- **데이터베이스**: DynamoDB
+- **언어**: JavaScript/TypeScript, Nest.js
+- **컨테이너화**: Docker
+- **배포**: Serverless Framework
 
-## Key Features
+## 자동화 항목
 
-1. **Automated Login**
+### 1. **자동 로그인**
 
-   - Securely store account information and handle login process
+- 계정 정보를 안전하게 저장하고 로그인 프로세스 처리
+- AWS Parameter Store를 통한 민감한 정보 관리
 
-2. **Automated Ticket Purchase**
+### 2. **자동 티켓 구매**
 
-   - Support for random number generation or custom number selection
-   - Scheduled regular purchases
+- 랜덤 번호 생성 또는 사용자 지정 번호 선택 지원
+- 정기적인 자동 구매 스케줄링
+- Lambda 함수를 통한 서버리스 실행
 
-3. **Results Checking**
+### 3. **당첨 결과 확인**
 
-   - Verify winning status for purchased tickets
-   - Maintain winning statistics and history
+- 구매한 티켓의 당첨 여부 확인
+- 당첨 통계 및 이력 관리
+- DynamoDB를 통한 데이터 영속성
 
-4. **Notification Service**
-   - Email or other notifications upon winning
+### 4. **알림 서비스**
 
-## Architecture Diagram
+- 당첨 시 슬랙 또는 기타 알림 발송
+- 구매 완료 및 결과 확인 알림
 
-![Lotto Automation Architecture](/lotto-automation.drawio.svg)
+### 5. **스케줄링**
 
-The diagram above illustrates the architecture of the Lotto Automation system, showing the interaction between various components including AWS ECS, Playwright containers, and DynamoDB.
+- CloudWatch Events를 통한 자동 실행
+- 매주 정기적인 로또 구매 및 결과 확인
 
-## Future Plans
+## 아키텍처 다이어그램
 
-- Build API endpoints
-- Develop web interface
-- Implement advanced number recommendation algorithms
-- Mobile app development
+![Lotto Automation Architecture](./lotto-automation.drawio.svg)
 
-## License
-
-MIT
-
-## Contributing
-
-Pull Requests and Issues are always welcome!
+위 다이어그램은 AWS Lambda, DynamoDB, Parameter Store 등의 구성 요소 간의 상호작용을 포함한 로또 자동화 시스템의 아키텍처를 보여줍니다.
