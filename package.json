@@ -32,6 +32,7 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@playwright/test": "^1.52.0",
+    "@rekog/mcp-nest": "^1.8.4",
     "@types/crypto-js": "^4.2.2",
     "aws-lambda": "^1.0.7",
     "axios": "^1.9.0",
