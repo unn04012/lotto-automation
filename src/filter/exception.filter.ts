@@ -1,9 +1,11 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
+import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { NotificationSlackService } from 'src/notification/notificaiton-slack.service';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
+  private readonly _logger = new Logger(GlobalExceptionFilter.name);
+
   constructor(private readonly notificationService: NotificationSlackService) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
@@ -46,7 +48,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         },
       });
     } catch (slackError) {
-      console.error('Slack 알림 전송 실패:', slackError);
+      this._logger.error('Slack 알림 전송 실패:', slackError);
     }
   }
 }

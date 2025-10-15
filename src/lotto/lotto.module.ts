@@ -9,10 +9,12 @@ import { DynamoDBConfigModule } from 'src/config/dynamodb/dynamodb-config.module
 import { LottoController } from './lotto.controller';
 import { NotificationModule } from 'src/notification/notificaiton.module';
 import { EncryptionModule } from 'src/encryption/encryption.module';
+import { LottoMCPToolController } from './lotto-mcp-tool.controller';
+import { LottoMCPResourceController } from './lotto-mcp-resource.controller';
 
 @Module({
   imports: [LottoConfigModule, DynamoDBConfigModule, LotteryAgentModule, NotificationModule, EncryptionModule],
-  controllers: [LottoController],
+  controllers: [LottoController, LottoMCPToolController, LottoMCPResourceController],
   providers: [
     UserService,
     LottoService,
@@ -21,5 +23,6 @@ import { EncryptionModule } from 'src/encryption/encryption.module';
       provide: Symbols.userLottoRepository,
     },
   ],
+  exports: [],
 })
 export class LottoModule {}

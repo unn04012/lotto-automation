@@ -45,135 +45,89 @@ export class McpService implements OnModuleInit, OnModuleDestroy {
     this.logger.log('MCP Server initialized successfully');
   }
 
-  private registerHandlers() {
+  private async registerHandlers() {
     // Tools 리스트 핸들러
-    this.server.setRequestHandler('tools/list', async () => {
-      return {
-        tools: this.tools.map((tool) => ({
-          name: tool.name,
-          description: tool.description,
-          inputSchema: tool.inputSchema,
-        })),
-      };
-    });
+    this.server.setRequestHandler(z.object({ method: z.literal('tools/list') }), async () => ({
+      tools: this.tools.map((tool) => ({
+        name: tool.name,
+        description: tool.description,
+        inputSchema: tool.inputSchema,
+      })),
+    }));
 
     // Tool 실행 핸들러
-    this.server.setRequestHandler('tools/call', async (request) => {
-      const toolName = request.params.name;
-      const tool = this.tools.find((t) => t.name === toolName);
-
-      if (!tool) {
-        throw new Error(`Tool "${toolName}" not found`);
-      }
-
-      try {
-        const result = await tool.target[tool.methodName](request.params.arguments);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(result, null, 2),
-            },
-          ],
-        };
-      } catch (error) {
-        throw new Error(`Tool execution failed: ${error.message}`);
-      }
-    });
-
-    // Resources 리스트 핸들러
-    this.server.setRequestHandler('resources/list', async () => {
-      return {
-        resources: this.resources.map((resource) => ({
-          uri: resource.uri,
-          name: resource.name,
-          description: resource.description,
-          mimeType: resource.mimeType,
-        })),
-      };
-    });
-
-    // Resource 읽기 핸들러
-    this.server.setRequestHandler('resources/read', async (request) => {
-      const uri = request.params.uri;
-      const resource = this.resources.find((r) => r.uri === uri);
-
-      if (!resource) {
-        throw new Error(`Resource "${uri}" not found`);
-      }
-
-      try {
-        const content = await resource.target[resource.methodName](request.params);
-        return {
-          contents: [
-            {
-              uri: resource.uri,
-              mimeType: resource.mimeType || 'text/plain',
-              text: typeof content === 'string' ? content : JSON.stringify(content, null, 2),
-            },
-          ],
-        };
-      } catch (error) {
-        throw new Error(`Resource read failed: ${error.message}`);
-      }
-    });
-  }
-
-  private async registerHandlers() {
-    // Resources 목록
-
-    this.server.setRequestHandler(z.object({ method: z.literal('resources/list') }), async () => ({
-      resources: [
-        {
-          uri: 'example://resource',
-          name: 'Example Resource',
-          description: 'An example resource',
-          mimeType: 'text/plain',
-        },
-      ],
-    }));
-
-    // Tools 목록
-    this.server.setRequestHandler(z.object({ method: z.literal('tools/list') }), async () => ({
-      tools: [
-        {
-          name: 'echo',
-          description: 'Echo back the input',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              message: { type: 'string' },
-            },
-            required: ['message'],
-          },
-        },
-      ],
-    }));
-
-    // Tool 실행
     this.server.setRequestHandler(
       z.object({
         method: z.literal('tools/call'),
         params: z.object({
           name: z.string(),
-          arguments: z.any(),
+          arguments: z.any().optional(),
         }),
       }),
       async (request) => {
-        const { name, arguments: args } = request.params;
+        const toolName = request.params.name;
+        const tool = this.tools.find((t) => t.name === toolName);
 
-        if (name === 'echo') {
+        if (!tool) {
+          throw new Error(`Tool "${toolName}" not found`);
+        }
+
+        try {
+          const result = await tool.target[tool.methodName](request.params.arguments);
           return {
             content: [
               {
                 type: 'text',
-                text: `Echo: ${args.message}`,
+                text: JSON.stringify(result, null, 2),
               },
             ],
           };
+        } catch (error) {
+          throw new Error(`Tool execution failed: ${error.message}`);
+        }
+      },
+    );
+
+    // Resources 리스트 핸들러
+    this.server.setRequestHandler(z.object({ method: z.literal('resources/list') }), async () => ({
+      resources: this.resources.map((resource) => ({
+        uri: resource.uri,
+        name: resource.name,
+        description: resource.description,
+        mimeType: resource.mimeType,
+      })),
+    }));
+
+    // Resource 읽기 핸들러
+    this.server.setRequestHandler(
+      z.object({
+        method: z.literal('resources/read'),
+        params: z.object({
+          uri: z.string(),
+        }),
+      }),
+      async (request) => {
+        const uri = request.params.uri;
+        const resource = this.resources.find((r) => r.uri === uri);
+
+        if (!resource) {
+          throw new Error(`Resource "${uri}" not found`);
         }
 
-        throw new Error(`Unknown tool: ${name}`);
+        try {
+          const content = await resource.target[resource.methodName](request.params);
+          return {
+            contents: [
+              {
+                uri: resource.uri,
+                mimeType: resource.mimeType || 'text/plain',
+                text: typeof content === 'string' ? content : JSON.stringify(content, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          throw new Error(`Resource read failed: ${error.message}`);
+        }
       },
     );
   }

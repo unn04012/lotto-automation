@@ -2,20 +2,27 @@ import { NestFactory } from '@nestjs/core';
 
 import { Callback, Context, Handler } from 'aws-lambda';
 import { AppModule } from './app.module';
-import { AppConfigService, EnvironmentType } from './config/app/app.config.service';
+import { AppConfigService } from './config/app/app.config.service';
 import { ApiKeyGuard } from './guard/api-key.guard';
 import { GlobalExceptionFilter } from './filter/exception.filter';
 import { NotificationSlackService } from './notification/notificaiton-slack.service';
+import { ConsoleLogger } from '@nestjs/common';
 
 const serverlessExpress = require('@codegenie/serverless-express');
 
 let server: Handler;
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const isLocal = process.env.ENVIRONMENT === 'LOCAL';
+  const app = await NestFactory.create(AppModule, {
+    logger: new ConsoleLogger({ json: true, colors: isLocal }),
+    // logger: ['error', 'warn'],
+  });
 
   const config = app.get(AppConfigService);
-  app.useGlobalGuards(new ApiKeyGuard(config));
+
+  const logger = new ConsoleLogger({ json: true, colors: config.env === 'LOCAL' });
+  // app.useGlobalGuards(new ApiKeyGuard(config));
 
   const notificationService = app.get(NotificationSlackService);
   app.useGlobalFilters(new GlobalExceptionFilter(notificationService));
@@ -24,9 +31,9 @@ async function bootstrap() {
 
   if (config.env === 'LOCAL') {
     app.listen(config.httpPort, () => {
-      console.log(`Server is running on http://localhost:${config.httpPort}`);
+      logger.log(`Server is running on http://localhost:${config.httpPort}`);
     });
-  } else {
+  } else if (config.env === 'PROD') {
     const expressApp = app.getHttpAdapter().getInstance();
     expressApp.use((req, res, next) => {
       if (req.url.startsWith('/prod')) {

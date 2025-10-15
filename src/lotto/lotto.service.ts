@@ -47,6 +47,25 @@ export class LottoService {
     return userLotto.getUserLotto();
   }
 
+  /**
+   * 구입한 로또를 저장합니다.
+   */
+  public async createLotto(purchasedNumbers: number[], round: number) {
+    const purchasedDate = new Date();
+
+    const userLottoEntity = UserLottoEntity.create({
+      userId: this._userId,
+      purchasedNumbers,
+      purchasedDate,
+      round,
+      lottoType: 'LOTTO',
+    });
+
+    const userLotto = await this._userLottoRepository.save(userLottoEntity);
+
+    return userLotto.getUserLotto();
+  }
+
   public async getUserLotto(type: LottoType, round?: string) {
     const roundNumber = round ? Number(round) : (await this._lotteryAgent.getLottoNumber()).round;
 

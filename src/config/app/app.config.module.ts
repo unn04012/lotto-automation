@@ -25,7 +25,7 @@ import { AppConfigService } from './app.config.service';
         API_KEY: Joi.string().required(),
         HTTP_PORT: Joi.number().required(),
         API_HEADER_KEY: Joi.string().required(),
-        ENVIRONMENT: Joi.string().valid('LOCAL', 'PROD').default('PROD'),
+        ENVIRONMENT: Joi.string().valid('LOCAL', 'PROD', 'MCP').default('PROD'),
       }),
     }),
   ],
