@@ -36,6 +36,7 @@ This project automates the following tasks on the [Korean Lottery (Dong Hang Bok
    - Maintain winning statistics and history
 
 4. **Notification Service**
+
    - Email or other notifications upon winning
 
 ## Architecture Diagram
