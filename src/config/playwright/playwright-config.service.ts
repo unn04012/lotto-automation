@@ -10,7 +10,7 @@ export class PlayWrightConfigService {
   ) {}
 
   get headless() {
-    return this._configService.get('playwright.headless');
+    return this._configService.get('playwright.headless') ?? true;
   }
 
   get launchOptions() {
