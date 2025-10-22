@@ -1,6 +1,6 @@
-import { DynamoDBConfigService } from 'src/config/dynamodb/dynamodb-config.service';
 import { UserLottoEntity } from '../domain/user-lotto.entity';
-import { CreateUserLottoDto, IUserLottoRepository, LottoType, LottoTypeEnum, PrizeStatus } from './user-lotto.repository.interface';
+import { DynamoDBConfigService } from 'src/config/dynamodb/dynamodb-config.service';
+import { IUserLottoRepository, LottoType, LottoTypeEnum, PrizeStatus } from './user-lotto.repository.interface';
 import {
   AttributeValue,
   DynamoDBClient,
@@ -11,11 +11,13 @@ import {
   QueryCommand,
   QueryCommandInput,
 } from '@aws-sdk/client-dynamodb';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class UserLottoRepositoryDynamoDB implements IUserLottoRepository {
   private readonly _client: DynamoDBClient;
+  private readonly _logger = new Logger(UserLottoRepositoryDynamoDB.name);
+
   constructor(private readonly _dynamoDBConfig: DynamoDBConfigService) {
     this._client = this._dynamoDBConfig.client;
   }
@@ -37,7 +39,7 @@ export class UserLottoRepositoryDynamoDB implements IUserLottoRepository {
 
       return this._mapDynamoDBItemToEntity(result.Item);
     } catch (error) {
-      console.error('Error querying user lotto by purchaseId:', error);
+      this._logger.error('Error querying user lotto by purchaseId:', error);
       throw error;
     }
   }
@@ -57,14 +59,14 @@ export class UserLottoRepositoryDynamoDB implements IUserLottoRepository {
 
     try {
       const result = await this._client.send(new QueryCommand(params));
-
+      console.log(result.Items);
       if (!result.Items || result.Items.length === 0) {
         return []; // 결과가 없을 경우 빈 배열 반환
       }
 
       return result.Items.map((item) => this._mapDynamoDBItemToEntity(item));
     } catch (error) {
-      console.error('Error querying user lotto:', error);
+      this._logger.error('Error querying user lotto:', error);
       throw error;
     }
   }

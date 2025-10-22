@@ -5,8 +5,10 @@ import { LottoModule } from './lotto/lotto.module';
 import { NotificationModule } from './notification/notificaiton.module';
 import { EncryptionModule } from './encryption/encryption.module';
 import { AppConfigModule } from './config/app/app.config.module';
+import { LottoMcpModule } from './mcp/mcp.module';
+import { LottoConfigModule } from './config/lotto/lotto-config.module';
 
 @Module({
-  imports: [ConfigModule, LotteryAgentModule, LottoModule, NotificationModule, EncryptionModule, AppConfigModule],
+  imports: [LottoConfigModule, LotteryAgentModule, LottoModule, NotificationModule, EncryptionModule, AppConfigModule, LottoMcpModule],
 })
 export class AppModule {}

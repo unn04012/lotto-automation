@@ -1,6 +1,7 @@
-import { Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { LottoService } from './lotto.service';
 import { LottoType } from './repository/user-lotto.repository.interface';
+import { CreateLottoRequestDto } from './dto/create-lotto-request.dto';
 
 @Controller('prod/lotto')
 export class LottoController {
@@ -9,6 +10,11 @@ export class LottoController {
   @Post()
   public async buyLotto() {
     await this.lottoService.buyLotto();
+  }
+
+  @Post('manual')
+  public async buyLottoManual(@Body() dto: CreateLottoRequestDto) {
+    return await this.lottoService.buyLottoManual(dto.purchasedNumbers);
   }
 
   @Get('type/:type')

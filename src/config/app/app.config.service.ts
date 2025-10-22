@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 enum EnvironmentEnum {
   LOCAL = 'LOCAL',
   PROD = 'PROD',
+  MCP = 'MCP',
 }
 export type EnvironmentType = keyof typeof EnvironmentEnum;
 

@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { SlackConfigService } from 'src/config/slack/slack.config.service';
 
@@ -26,6 +26,7 @@ export interface ErrorInfo {
 
 @Injectable()
 export class NotificationSlackService {
+  private readonly _logger = new Logger(NotificationSlackService.name);
   constructor(
     private readonly slackConfigService: SlackConfigService,
     private readonly httpService: HttpService,
@@ -322,7 +323,7 @@ export class NotificationSlackService {
       await firstValueFrom(this.httpService.post(webhookUrl, payload));
     } catch (error) {
       // Slack 전송 실패 시 콘솔에 로그만 남기고 에러를 던지지 않음
-      console.error('Slack 메시지 전송 실패:', error.message);
+      this._logger.error('Slack 메시지 전송 실패:', error.message);
     }
   }
 

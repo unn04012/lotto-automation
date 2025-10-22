@@ -17,8 +17,38 @@ export class LottoService {
     private readonly notificationSlackService: NotificationSlackService,
   ) {}
 
-  public async buyLotto() {
+  public async buyLottoManual(numbers: number[]) {
     await this._lotteryAgent.initialize();
+
+    const userCredentials = await this._userService.getUserCredentials();
+
+    await this._lotteryAgent.login(userCredentials);
+
+    const { round } = await this._lotteryAgent.buyLottery(numbers);
+
+    const purchasedDate = new Date();
+
+    const userLottoEntity = UserLottoEntity.create({
+      userId: this._userId,
+      purchasedNumbers: numbers,
+      purchasedDate,
+      round,
+      lottoType: 'LOTTO',
+    });
+
+    const userLotto = await this._userLottoRepository.save(userLottoEntity);
+
+    await this.notificationSlackService.sendPurchaseCompletionNotification({
+      purchasedDate,
+      purchasedNumbers: numbers,
+      game: '6/45',
+    });
+
+    return userLotto.getUserLotto();
+  }
+
+  public async buyLotto() {
+    // await this._lotteryAgent.initialize();
 
     const userCredentials = await this._userService.getUserCredentials();
 
@@ -43,6 +73,25 @@ export class LottoService {
       purchasedNumbers,
       game: '6/45',
     });
+
+    return userLotto.getUserLotto();
+  }
+
+  /**
+   * 구입한 로또를 저장합니다.
+   */
+  public async createLotto(purchasedNumbers: number[], round: number) {
+    const purchasedDate = new Date();
+
+    const userLottoEntity = UserLottoEntity.create({
+      userId: this._userId,
+      purchasedNumbers,
+      purchasedDate,
+      round,
+      lottoType: 'LOTTO',
+    });
+
+    const userLotto = await this._userLottoRepository.save(userLottoEntity);
 
     return userLotto.getUserLotto();
   }
