@@ -12,12 +12,8 @@ const serverlessExpress = require('@codegenie/serverless-express');
 
 let server: Handler;
 
-async function bootstrap() {
-  const isLocal = process.env.ENVIRONMENT === 'LOCAL';
-  const app = await NestFactory.create(AppModule, {
-    logger: new ConsoleLogger({ json: true, colors: isLocal }),
-    // logger: ['error', 'warn'],
-  });
+async function bootstrap(): Promise<Handler | void> {
+  const app = await NestFactory.create(AppModule);
 
   const config = app.get(AppConfigService);
 
@@ -30,10 +26,10 @@ async function bootstrap() {
   await app.init();
 
   if (config.env === 'LOCAL') {
-    app.listen(config.httpPort, () => {
-      logger.log(`Server is running on http://localhost:${config.httpPort}`);
-    });
-  } else if (config.env === 'PROD') {
+    await app.listen(config.httpPort);
+    logger.log(`Server is running on http://localhost:${config.httpPort}`);
+    return;
+  } else {
     const expressApp = app.getHttpAdapter().getInstance();
 
     return serverlessExpress({ app: expressApp });
