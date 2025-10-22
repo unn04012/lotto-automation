@@ -17,6 +17,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     const message = exception instanceof HttpException ? exception.message : 'Internal server error';
 
+    this._logger.error(exception);
+
     // 500 에러나 중요한 에러만 Slack 알림
     if (status >= 500) {
       this.sendErrorToSlack(exception, request);

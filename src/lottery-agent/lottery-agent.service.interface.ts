@@ -28,7 +28,7 @@ export interface ILotteryAgentService {
    * 일반 로또를 구매합니다.
    * @param numbers
    */
-  buyLottery(numbers: number[]): Promise<void>;
+  buyLottery(numbers: number[]): Promise<{ round: number }>;
 
   /**
    * 로또 자동 번호로 구매합니다.
@@ -41,4 +41,10 @@ export interface ILotteryAgentService {
    * @param numbers
    */
   buyAnnuityLottery(numbers: number[]): Promise<void>;
+
+  /**
+   * 브라우저 세션을 명시적으로 종료합니다.
+   * 모든 작업이 완료된 후 호출해야 합니다.
+   */
+  close(): Promise<void>;
 }
