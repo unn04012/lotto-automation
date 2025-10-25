@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common
 import { McpStreamableHttpService } from '@rekog/mcp-nest';
 import { ApiKeyGuard } from 'src/guard/api-key.guard';
 
-@Controller()
+@Controller('/prod')
 @UseGuards(ApiKeyGuard)
 export class McpHttpStreamableController {
   constructor(private readonly mcpStreamableHttpService: McpStreamableHttpService) {}
