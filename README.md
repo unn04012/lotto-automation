@@ -52,5 +52,3 @@ AWS Lambda와 Serverless Framework를 활용한 한국 로또 6/45 자동 구매
 ## 아키텍처 다이어그램
 
 ![Lotto Automation Architecture](./lotto-automation.drawio.svg)
-
-위 다이어그램은 AWS Lambda, DynamoDB, Parameter Store 등의 구성 요소 간의 상호작용을 포함한 로또 자동화 시스템의 아키텍처를 보여줍니다.
