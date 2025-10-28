@@ -432,21 +432,20 @@ export class LotteryAgentPlayWrightService implements ILotteryAgentService {
       });
 
       await this.page.goto(url, {
-        timeout: 120000,
         waitUntil: 'domcontentloaded',
       });
-      await this.page.waitForTimeout(100000);
+      await this.page.waitForTimeout(1000);
 
       this._logger.log('페이지 로드 완료, iframe 대기 중...');
       this._logger.log(`현재 URL: ${this.page.url()}`);
       this._logger.log(`페이지 닫힘 상태: ${this.page.isClosed()}`);
 
       // iframe이 로드될 때까지 대기
-      await this.page.waitForSelector('#ifrm_tab', { timeout: 30000 });
+      await this.page.waitForSelector('#ifrm_tab', { timeout: 3000 });
       this._logger.log('iframe 요소 발견');
 
       // 약간의 대기 시간 추가 (iframe 내부 컨텐츠가 로드될 시간)
-      await this.page.waitForTimeout(100000);
+      await this.page.waitForTimeout(3000);
 
       // iframe 요소 가져오기
       const frameElement = await this.page.$('#ifrm_tab');
